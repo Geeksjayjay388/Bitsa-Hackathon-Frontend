@@ -1,0 +1,265 @@
+import React, { useState } from 'react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer.jsx';
+function Gallery() {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = ['All', 'Hackathons', 'Workshops', 'Events', 'Team'];
+
+  const images = [
+    {
+      id: 1,
+      url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+      title: "Hackathon 2023",
+      category: "Hackathons",
+      description: "48 hours of innovation"
+    },
+    {
+      id: 2,
+      url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80",
+      title: "Team Meeting",
+      category: "Team",
+      description: "Planning the next big thing"
+    },
+    {
+      id: 3,
+      url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
+      title: "Workshop Session",
+      category: "Workshops",
+      description: "Hands-on learning experience"
+    },
+    {
+      id: 4,
+      url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
+      title: "Tech Career Fair",
+      category: "Events",
+      description: "Connecting with industry"
+    },
+    {
+      id: 5,
+      url: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80",
+      title: "Code Review",
+      category: "Team",
+      description: "Collaborative development"
+    },
+    {
+      id: 6,
+      url: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80",
+      title: "Coding Marathon",
+      category: "Hackathons",
+      description: "Building solutions together"
+    },
+    {
+      id: 7,
+      url: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80",
+      title: "Database Workshop",
+      category: "Workshops",
+      description: "SQL mastery session"
+    },
+    {
+      id: 8,
+      url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80",
+      title: "Annual Meetup",
+      category: "Events",
+      description: "Community gathering"
+    },
+    {
+      id: 9,
+      url: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80",
+      title: "Project Showcase",
+      category: "Hackathons",
+      description: "Presenting innovations"
+    },
+    {
+      id: 10,
+      url: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&q=80",
+      title: "Leadership Team",
+      category: "Team",
+      description: "BITSA executives"
+    },
+    {
+      id: 11,
+      url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80",
+      title: "Cloud Computing",
+      category: "Workshops",
+      description: "AWS certification prep"
+    },
+    {
+      id: 12,
+      url: "https://images.unsplash.com/photo-1528605105345-5344ea20e269?w=800&q=80",
+      title: "Networking Night",
+      category: "Events",
+      description: "Building connections"
+    }
+  ];
+
+  const filteredImages = selectedCategory === 'All' 
+    ? images 
+    : images.filter(img => img.category === selectedCategory);
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+        <Navbar/>
+      {/* Animated Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Floating particles */}
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-cyan-400/20"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${2 + Math.random() * 3}px`,
+              height: `${2 + Math.random() * 3}px`,
+              animation: `float ${10 + Math.random() * 10}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          ></div>
+        ))}
+      </div>
+
+      <div className="relative z-10 px-6 py-20">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto mb-16 text-center">
+          <div className="inline-block px-6 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-400/30 rounded-full mb-6">
+            <p className="text-cyan-300 text-sm font-semibold tracking-widest">MEMORIES & MOMENTS</p>
+          </div>
+          <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-6">
+            Our Gallery
+          </h1>
+          <p className="text-lg text-slate-400 max-w-3xl mx-auto">
+            Explore our journey through pictures. From hackathons to workshops, every moment captured tells a story of innovation and community.
+          </p>
+          <div className="w-32 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mt-8"></div>
+        </div>
+
+        {/* Category Filter */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <div className="flex flex-wrap justify-center gap-4">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-8 py-3 rounded-full font-bold transition-all duration-300 ${
+                  selectedCategory === category
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-400/50 scale-105'
+                    : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:border-cyan-400/50'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Gallery Grid - Creative Masonry Layout */}
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredImages.map((image, index) => {
+              // Creative sizing - make some images larger
+              const isLarge = index % 5 === 0;
+              const isTall = index % 7 === 0;
+              
+              return (
+                <div
+                  key={image.id}
+                  className={`group relative overflow-hidden rounded-3xl cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 ${
+                    isLarge ? 'md:col-span-2 md:row-span-2' : isTall ? 'md:row-span-2' : ''
+                  }`}
+                  style={{ 
+                    animation: `fadeInScale 0.6s ease-out ${index * 0.05}s both`,
+                    minHeight: isLarge ? '500px' : isTall ? '450px' : '300px'
+                  }}
+                >
+                  {/* Image */}
+                  <img
+                    src={image.url}
+                    alt={image.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
+                  
+                  {/* Content Overlay */}
+                  <div className="absolute inset-0 flex flex-col justify-end p-6 text-white transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
+                    {/* Category Badge */}
+                    <div className="mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <span className="px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-bold">
+                        {image.category}
+                      </span>
+                    </div>
+                    
+                    {/* Title */}
+                    <h3 className="text-2xl font-black mb-2 transform translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
+                      {image.title}
+                    </h3>
+                    
+                    {/* Description */}
+                    <p className="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                      {image.description}
+                    </p>
+                    
+                    {/* View Icon */}
+                    <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-cyan-500 hover:scale-110">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {/* Decorative Corner */}
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-bl-full"></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Load More Button */}
+        <div className="max-w-7xl mx-auto mt-16 text-center">
+          <button className="group px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-full hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-400/50 hover:scale-105 active:scale-95">
+            <span className="flex items-center gap-3">
+              Load More Photos
+              <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0) translateX(0);
+            opacity: 0.3;
+          }
+          50% {
+            transform: translateY(-20px) translateX(10px);
+            opacity: 0.6;
+          }
+        }
+      `}</style>
+      <Footer/>
+    </div>
+  );
+}
+
+export default Gallery;
