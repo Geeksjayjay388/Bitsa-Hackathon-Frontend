@@ -43,16 +43,17 @@ function Footer() {
             </div>
             
             {/* Newsletter */}
-            <div className="text-center md:text-right">
+           {/* Newsletter */}
+            <div className="text-center md:text-right w-full md:w-auto">
               <h4 className="text-2xl font-bold text-white mb-3">Join Our Community</h4>
-              <p className="text-slate-400 text-sm mb-4 max-w-md">
+              <p className="text-slate-400 text-sm mb-4 max-w-md mx-auto md:mx-0">
                 Subscribe for updates on events, workshops, and opportunities
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                 <input 
                   type="email" 
                   placeholder="Enter your email"
-                  className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all duration-300 min-w-[250px]"
+                  className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all duration-300 w-full sm:min-w-[250px]"
                 />
                 <button className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-full hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-cyan-400/50 transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap">
                   Subscribe

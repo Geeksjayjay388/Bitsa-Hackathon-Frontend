@@ -64,7 +64,7 @@ function MainContainer() {
             </div>
 
             <div className="mb-12">
-              <h1 className="text-8xl md:text-[11rem] font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-8 tracking-tighter leading-none drop-shadow-2xl animate-[fadeInScale_1s_ease-out]" style={{ textShadow: '0 0 80px rgba(34,211,238,0.3)' }}>
+              <h1 className="text-7xl md:text-[11rem] font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-8 tracking-tighter leading-none drop-shadow-2xl animate-[fadeInScale_1s_ease-out]" style={{ textShadow: '0 0 80px rgba(34,211,238,0.3)' }}>
                 B I T S A
               </h1>
               <div className="w-40 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mb-10 animate-pulse"></div>
