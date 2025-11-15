@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5500/api';
+const API_URL = 'https://bitsa-website-backend.onrender.com/api';
 
 // Helper function to get auth token
 const getAuthToken = () => {
