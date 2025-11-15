@@ -1,82 +1,224 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';  // ✅ Import Link
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
-  const [hoveredItem, setHoveredItem] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Events', path: '/events' },
-    { name: 'Gallery', path: '/gallery' },
-    { name: 'Blog', path: '/blog' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Contacts', path: '/contacts' },
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setIsOpen(false);
+    setDropdownOpen(false);
+  };
+
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Events", path: "/events" },
+    { name: "Gallery", path: "/gallery" },
+    { name: "Blog", path: "/blog" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contacts" },
   ];
 
   return (
-    <main className="text-white backdrop-blur-md pt-4">
-      <nav className="w-full backdrop-blur-xl border-white/10 shadow-2xl px-8 py-4 animate-[slideDown_0.6s_ease-out]">
-        <div className="max-w-[98%] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          {/* Logo Section */}
-          <section className="flex-shrink-0">
-            <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 bg-clip-text text-transparent tracking-tight animate-[fadeIn_0.8s_ease-out] hover:scale-105 transition-transform duration-300 cursor-pointer">
-              BITSA
-            </h1>
-          </section>
-
-          {/* Navigation Links */}
-          <section className="flex justify-center ml-7">
-            <div className="bg-gradient-to-r from-white/10 via-white/5 to-white/10 backdrop-blur-md rounded-full px-10 py-3 border border-cyan-400/30 shadow-[0_4px_24px_0_rgba(34,211,238,0.2)]">
-              <ul className="flex items-center gap-14">
-                {navItems.map((item, index) => (
-                  <li
-                    key={item.name}
-                    onMouseEnter={() => setHoveredItem(item.name)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                    className={`relative text-[1.1rem] font-semibold cursor-pointer transition-all duration-300 whitespace-nowrap ${
-                      hoveredItem === item.name ? 'text-cyan-400' : 'text-slate-300'
-                    }`}
-                    style={{
-                      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
-                      transform: hoveredItem === item.name ? 'translateY(-2px)' : 'translateY(0)'
-                    }}
-                  >
-                    {/* ✅ Link instead of plain text */}
-                    <Link to={item.path}>
-                      {item.name}
-                    </Link>
-                    
-                    {hoveredItem === item.name && (
-                      <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-[expand_0.3s_ease-out] shadow-lg shadow-cyan-400/50" />
-                    )}
-                  </li>
-                ))}
-              </ul>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center backdrop-blur-sm transition-transform group-hover:scale-110">
+              <span className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                B
+              </span>
             </div>
-          </section>
+            <span className="text-2xl font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent">
+              BITSA
+            </span>
+          </Link>
 
-          {/* Auth Buttons */}
-          <section className="flex items-center gap-3 animate-[fadeIn_0.8s_ease-out]">
-            <Link to="/login">
-              <button className="relative px-7 py-3 text-sm font-semibold text-white overflow-hidden group rounded-full border border-cyan-400/40 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-sm transition-all duration-300 hover:border-cyan-400/60 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-105 active:scale-95">
-                <span className="relative z-10">Log In</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              </button>
-            </Link>
-            <Link to="/signup">
-              <button className="relative px-7 py-3 text-sm font-bold text-black overflow-hidden group rounded-full bg-gradient-to-r from-cyan-400 via-cyan-300 to-blue-400 transition-all duration-300 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] hover:scale-105 active:scale-95">
-                <span className="relative z-10">Sign Up</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-300 via-blue-300 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]"></div>
-                </div>
-              </button>
-            </Link>
-          </section>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                className="text-slate-300 hover:text-cyan-400 font-semibold transition-colors relative group"
+              >
+                {link.name}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 group-hover:w-full transition-all duration-300"></span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Right Side Auth */}
+          <div className="hidden md:flex items-center gap-4">
+            {isAuthenticated ? (
+              <div className="relative">
+                {/* Toggle Dropdown */}
+                <button
+                  onClick={() => setDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-white font-semibold">{user?.name}</span>
+                  <svg
+                    className={`w-4 h-4 text-slate-400 transition-transform ${
+                      dropdownOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Dropdown */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl transition-all duration-200">
+                    <div className="p-4 border-b border-white/10">
+                      <p className="text-white font-bold">{user?.name}</p>
+                      <p className="text-slate-400 text-sm">{user?.email}</p>
+                    </div>
+                    <div className="p-2">
+                      {isAdmin() && (
+                        <Link
+                          to="/admin/dashboard"
+                          onClick={() => setDropdownOpen(false)}
+                          className="block px-4 py-2 text-purple-400 hover:bg-purple-500/10 rounded-lg transition-all"
+                        >
+                          🔧 Admin Dashboard
+                        </Link>
+                      )}
+
+                      <Link
+                        to="/events"
+                        onClick={() => setDropdownOpen(false)}
+                        className="block px-4 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-all"
+                      >
+                        📅 My Events
+                      </Link>
+
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                      >
+                        🚪 Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-6 py-2 text-cyan-400 font-bold hover:text-cyan-300 transition-colors"
+                >
+                  Login
+                </Link>
+
+                <Link
+                  to="/signup"
+                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all hover:shadow-lg hover:shadow-cyan-400/50"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 text-slate-300 hover:text-cyan-400 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {isOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
-      </nav>
-    </main>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden mt-4 py-4 border-t border-white/10 animate-fadeIn">
+            <div className="flex flex-col gap-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setIsOpen(false)}
+                  className="text-slate-300 hover:text-cyan-400 font-semibold transition-colors"
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              <div className="border-t border-white/10 pt-4 mt-2">
+                {isAuthenticated ? (
+                  <>
+                    <div className="mb-4 p-3 bg-white/5 rounded-xl">
+                      <p className="text-white font-bold">{user?.name}</p>
+                      <p className="text-slate-400 text-sm">{user?.email}</p>
+                    </div>
+
+                    {isAdmin() && (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsOpen(false)}
+                        className="block mb-2 px-4 py-2 text-purple-400 bg-purple-500/10 rounded-lg font-semibold"
+                      >
+                        🔧 Admin Dashboard
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-lg font-semibold"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setIsOpen(false)}
+                      className="block mb-2 px-6 py-2 text-center text-cyan-400 border border-cyan-400 rounded-xl font-bold"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      to="/signup"
+                      onClick={() => setIsOpen(false)}
+                      className="block px-6 py-2 text-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
   );
 }
 

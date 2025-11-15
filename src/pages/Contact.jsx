@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { feedbackAPI } from '../services/api';
 function Contact() {
   const [formData, setFormData] = useState({
     name: '',
@@ -8,6 +9,8 @@ function Contact() {
     subject: '',
     message: ''
   });
+  const [loading, setLoading] = useState(false); // Add this
+  const [error, setError] = useState(''); // Add this
 
   const handleChange = (e) => {
     setFormData({
@@ -16,13 +19,22 @@ function Contact() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    // Add your form submission logic here
-    alert('Message sent successfully!');
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  
+  try {
+    await feedbackAPI.submit(formData);
+    alert('Message sent successfully! We\'ll get back to you soon.');
     setFormData({ name: '', email: '', subject: '', message: '' });
-  };
+  } catch (err) {
+    setError(err.message || 'Failed to send message. Please try again.');
+    console.error('Feedback submission error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const contactInfo = [
     {
@@ -44,8 +56,8 @@ function Contact() {
         </svg>
       ),
       title: "Visit Us",
-      details: "Main Campus, Building A",
-      subtext: "Nairobi, Kenya",
+      details: "Main Campus, Information Systems Dept.",
+      subtext: "Kapsabet, Kenya",
       gradient: "from-blue-500 to-indigo-500"
     },
     {
@@ -121,7 +133,7 @@ function Contact() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white pt-20">
         <Navbar />
       {/* Animated Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -229,14 +241,24 @@ function Contact() {
                 </div>
 
                 <button
-                  type="submit"
-                  className="group w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <span>Send Message</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </button>
+  type="submit"
+  disabled={loading}
+  className="group w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+>
+  {loading ? (
+    <>
+      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      <span>Sending...</span>
+    </>
+  ) : (
+    <>
+      <span>Send Message</span>
+      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+      </svg>
+    </>
+  )}
+</button>
               </form>
             </div>
 

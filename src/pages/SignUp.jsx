@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function SignUp() {
+  const navigate = useNavigate();
+  const { signup } = useAuth();
+  
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -13,6 +18,8 @@ function SignUp() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -20,16 +27,70 @@ function SignUp() {
       ...formData,
       [name]: type === 'checkbox' ? checked : value
     });
+    setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    setError('');
+
+    // Validation
+    if (!formData.fullName.trim()) {
+      setError('Please enter your full name');
       return;
     }
-    console.log('Sign up submitted:', formData);
-    alert('Account created successfully!');
+
+    if (!formData.email.trim()) {
+      setError('Please enter your email');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match!');
+      return;
+    }
+
+    if (!formData.course) {
+      setError('Please select your course');
+      return;
+    }
+
+    if (!formData.year) {
+      setError('Please select your year');
+      return;
+    }
+
+    if (!formData.agreeTerms) {
+      setError('Please agree to terms and conditions');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await signup({
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        course: formData.course,
+        year: parseInt(formData.year)
+      });
+
+      if (result.success) {
+        navigate('/events');
+      } else {
+        setError(result.error || 'Registration failed. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,7 +129,7 @@ function SignUp() {
               <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
               
               <div className="relative">
-                <a href="/" className="inline-block mb-8">
+                <Link to="/" className="inline-block mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 flex items-center justify-center backdrop-blur-sm">
                       <span className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">B</span>
@@ -80,7 +141,7 @@ function SignUp() {
                       <p className="text-slate-400 text-sm font-semibold">Tech Community</p>
                     </div>
                   </div>
-                </a>
+                </Link>
                 
                 <h2 className="text-5xl font-black text-white mb-6 leading-tight">
                   Join the<br />
@@ -117,18 +178,30 @@ function SignUp() {
               
               {/* Mobile Logo */}
               <div className="lg:hidden text-center mb-8">
-                <a href="/" className="inline-block">
+                <Link to="/" className="inline-block">
                   <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-2">
                     BITSA
                   </h1>
                   <p className="text-slate-400 text-sm">Create Account</p>
-                </a>
+                </Link>
               </div>
 
               <h3 className="text-3xl font-black text-white mb-2">Create Account</h3>
               <p className="text-slate-400 mb-8">Join BITSA and start your tech journey today</p>
 
-              <div className="space-y-5">
+              {/* Error Alert */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-shake">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-red-400 text-sm font-semibold">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Full Name */}
                 <div>
                   <label className="block text-slate-300 font-semibold mb-2 text-sm">Full Name</label>
@@ -143,6 +216,7 @@ function SignUp() {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
+                      required
                       className="w-full pl-12 pr-5 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                       placeholder="Enter your full name"
                     />
@@ -163,6 +237,7 @@ function SignUp() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
+                      required
                       className="w-full pl-12 pr-5 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                       placeholder="you@example.com"
                     />
@@ -177,6 +252,7 @@ function SignUp() {
                       name="course"
                       value={formData.course}
                       onChange={handleChange}
+                      required
                       className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                     >
                       <option value="" className="bg-slate-900">Select</option>
@@ -191,6 +267,7 @@ function SignUp() {
                       name="year"
                       value={formData.year}
                       onChange={handleChange}
+                      required
                       className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                     >
                       <option value="" className="bg-slate-900">Select</option>
@@ -216,14 +293,25 @@ function SignUp() {
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
+                      required
                       className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                       placeholder="••••••••"
                     />
                     <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-cyan-400 transition-colors"
                     >
-                      {showPassword ? '👁️' : '👁️‍🗨️'}
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -242,14 +330,25 @@ function SignUp() {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
+                      required
                       className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400/50 focus:bg-white/10 transition-all"
                       placeholder="••••••••"
                     />
                     <button
+                      type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-cyan-400 transition-colors"
                     >
-                      {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                      {showConfirmPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -261,25 +360,39 @@ function SignUp() {
                     name="agreeTerms"
                     checked={formData.agreeTerms}
                     onChange={handleChange}
+                    required
                     className="w-5 h-5 rounded bg-white/5 border border-white/10 text-cyan-500 mt-0.5 cursor-pointer"
                   />
                   <label className="ml-3 text-slate-300 text-sm">
                     I agree to the{' '}
-                    <a href="/terms" className="text-cyan-400 font-semibold hover:text-cyan-300">Terms & Conditions</a>
+                    <Link to="/terms" className="text-cyan-400 font-semibold hover:text-cyan-300">Terms & Conditions</Link>
                     {' '}and{' '}
-                    <a href="/privacy" className="text-cyan-400 font-semibold hover:text-cyan-300">Privacy Policy</a>
+                    <Link to="/privacy" className="text-cyan-400 font-semibold hover:text-cyan-300">Privacy Policy</Link>
                   </label>
                 </div>
 
                 {/* Submit Button */}
                 <button
-                  onClick={handleSubmit}
-                  className="group w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105 flex items-center justify-center gap-2"
+                  type="submit"
+                  disabled={loading}
+                  className="group w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  <span>Create Account</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Creating account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Create Account</span>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </>
+                  )}
                 </button>
 
                 {/* Divider */}
@@ -297,20 +410,21 @@ function SignUp() {
                   {['Google', 'GitHub', 'LinkedIn'].map((provider) => (
                     <button
                       key={provider}
+                      type="button"
                       className="py-3 px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-300 hover:scale-105 text-slate-300 font-semibold text-sm"
                     >
                       {provider}
                     </button>
                   ))}
                 </div>
-              </div>
+              </form>
 
               {/* Login Link */}
               <p className="mt-8 text-center text-slate-400">
                 Already have an account?{' '}
-                <a href="/login" className="text-cyan-400 font-bold hover:text-cyan-300 transition-colors">
+                <Link to="/login" className="text-cyan-400 font-bold hover:text-cyan-300 transition-colors">
                   Sign in here
-                </a>
+                </Link>
               </p>
             </div>
           </div>
@@ -350,9 +464,15 @@ function SignUp() {
             opacity: 0.6;
           }
         }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
       `}</style>
     </div>
   );
 }
 
-export default SignUp;
+export default SignUp

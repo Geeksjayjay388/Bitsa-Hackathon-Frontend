@@ -23,7 +23,7 @@ function MainContainer() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-black text-white pt-20">
       <Navbar />
       
       <div className="relative w-full min-h-screen overflow-hidden bg-black">

@@ -1,104 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer.jsx';
+import { galleryAPI } from '../services/api';
+
 function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const categories = ['All', 'Hackathons', 'Workshops', 'Events', 'Team'];
 
-  const images = [
-    {
-      id: 1,
-      url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
-      title: "Hackathon 2023",
-      category: "Hackathons",
-      description: "48 hours of innovation"
-    },
-    {
-      id: 2,
-      url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80",
-      title: "Team Meeting",
-      category: "Team",
-      description: "Planning the next big thing"
-    },
-    {
-      id: 3,
-      url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
-      title: "Workshop Session",
-      category: "Workshops",
-      description: "Hands-on learning experience"
-    },
-    {
-      id: 4,
-      url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80",
-      title: "Tech Career Fair",
-      category: "Events",
-      description: "Connecting with industry"
-    },
-    {
-      id: 5,
-      url: "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&q=80",
-      title: "Code Review",
-      category: "Team",
-      description: "Collaborative development"
-    },
-    {
-      id: 6,
-      url: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80",
-      title: "Coding Marathon",
-      category: "Hackathons",
-      description: "Building solutions together"
-    },
-    {
-      id: 7,
-      url: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80",
-      title: "Database Workshop",
-      category: "Workshops",
-      description: "SQL mastery session"
-    },
-    {
-      id: 8,
-      url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80",
-      title: "Annual Meetup",
-      category: "Events",
-      description: "Community gathering"
-    },
-    {
-      id: 9,
-      url: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80",
-      title: "Project Showcase",
-      category: "Hackathons",
-      description: "Presenting innovations"
-    },
-    {
-      id: 10,
-      url: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&q=80",
-      title: "Leadership Team",
-      category: "Team",
-      description: "BITSA executives"
-    },
-    {
-      id: 11,
-      url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80",
-      title: "Cloud Computing",
-      category: "Workshops",
-      description: "AWS certification prep"
-    },
-    {
-      id: 12,
-      url: "https://images.unsplash.com/photo-1528605105345-5344ea20e269?w=800&q=80",
-      title: "Networking Night",
-      category: "Events",
-      description: "Building connections"
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const fetchGallery = async () => {
+    try {
+      const response = await galleryAPI.getAll();
+      setImages(response.data || []);
+    } catch (error) {
+      console.error('Error fetching gallery:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   const filteredImages = selectedCategory === 'All' 
     ? images 
     : images.filter(img => img.category === selectedCategory);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center pt-20">
+        <Navbar />
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading gallery...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white pt-20">
         <Navbar/>
       {/* Animated Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -157,81 +101,98 @@ function Gallery() {
           </div>
         </div>
 
-        {/* Gallery Grid - Creative Masonry Layout */}
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredImages.map((image, index) => {
-              // Creative sizing - make some images larger
-              const isLarge = index % 5 === 0;
-              const isTall = index % 7 === 0;
-              
-              return (
-                <div
-                  key={image.id}
-                  className={`group relative overflow-hidden rounded-3xl cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 ${
-                    isLarge ? 'md:col-span-2 md:row-span-2' : isTall ? 'md:row-span-2' : ''
-                  }`}
-                  style={{ 
-                    animation: `fadeInScale 0.6s ease-out ${index * 0.05}s both`,
-                    minHeight: isLarge ? '500px' : isTall ? '450px' : '300px'
-                  }}
-                >
-                  {/* Image */}
-                  <img
-                    src={image.url}
-                    alt={image.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                  
-                  {/* Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
-                  
-                  {/* Content Overlay */}
-                  <div className="absolute inset-0 flex flex-col justify-end p-6 text-white transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
-                    {/* Category Badge */}
-                    <div className="mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <span className="px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-bold">
-                        {image.category}
-                      </span>
-                    </div>
-                    
-                    {/* Title */}
-                    <h3 className="text-2xl font-black mb-2 transform translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
-                      {image.title}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p className="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                      {image.description}
-                    </p>
-                    
-                    {/* View Icon */}
-                    <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-cyan-500 hover:scale-110">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  {/* Decorative Corner */}
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-bl-full"></div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Load More Button */}
-        <div className="max-w-7xl mx-auto mt-16 text-center">
-          <button className="group px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-full hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-400/50 hover:scale-105 active:scale-95">
-            <span className="flex items-center gap-3">
-              Load More Photos
-              <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        {/* Empty State */}
+        {images.length === 0 ? (
+          <div className="max-w-4xl mx-auto text-center py-20">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12">
+              <svg className="w-24 h-24 mx-auto mb-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-            </span>
-          </button>
-        </div>
+              <h3 className="text-2xl font-black text-white mb-2">No Images Yet</h3>
+              <p className="text-slate-400">Check back soon for amazing moments!</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Gallery Grid - Creative Masonry Layout */}
+            <div className="max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredImages.map((image, index) => {
+                  // Creative sizing - make some images larger
+                  const isLarge = index % 5 === 0;
+                  const isTall = index % 7 === 0;
+                  
+                  return (
+                    <div
+                      key={image._id}
+                      className={`group relative overflow-hidden rounded-3xl cursor-pointer transition-all duration-500 hover:scale-105 hover:z-10 ${
+                        isLarge ? 'md:col-span-2 md:row-span-2' : isTall ? 'md:row-span-2' : ''
+                      }`}
+                      style={{ 
+                        animation: `fadeInScale 0.6s ease-out ${index * 0.05}s both`,
+                        minHeight: isLarge ? '500px' : isTall ? '450px' : '300px'
+                      }}
+                    >
+                      {/* Image */}
+                      <img
+                        src={image.image?.url || image.imageUrl || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"}
+                        alt={image.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-500"></div>
+                      
+                      {/* Content Overlay */}
+                      <div className="absolute inset-0 flex flex-col justify-end p-6 text-white transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
+                        {/* Category Badge */}
+                        <div className="mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                          <span className="px-4 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full text-xs font-bold">
+                            {image.category}
+                          </span>
+                        </div>
+                        
+                        {/* Title */}
+                        <h3 className="text-2xl font-black mb-2 transform translate-y-0 group-hover:-translate-y-2 transition-transform duration-500">
+                          {image.title}
+                        </h3>
+                        
+                        {/* Description */}
+                        <p className="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                          {image.description}
+                        </p>
+                        
+                        {/* View Icon */}
+                        <div className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-cyan-500 hover:scale-110">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      </div>
+                      
+                      {/* Decorative Corner */}
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-bl-full"></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Load More Button */}
+            {filteredImages.length > 0 && (
+              <div className="max-w-7xl mx-auto mt-16 text-center">
+                <button className="group px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-full hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-400/50 hover:scale-105 active:scale-95">
+                  <span className="flex items-center gap-3">
+                    View All Photos
+                    <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <style>{`
