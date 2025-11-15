@@ -59,63 +59,101 @@ function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative">
-                {/* Toggle Dropdown */}
+                {/* User Profile Button with Visible Name */}
                 <button
                   onClick={() => setDropdownOpen((prev) => !prev)}
-                  className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+                  className="group flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-white/5 to-white/10 border border-white/20 rounded-2xl hover:border-cyan-400/50 hover:bg-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/20"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                    {user?.name?.charAt(0).toUpperCase()}
+                  {/* Avatar with gradient border */}
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full blur-sm opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
                   </div>
-                  <span className="text-white font-semibold">{user?.name}</span>
-                  <svg
-                    className={`w-4 h-4 text-slate-400 transition-transform ${
-                      dropdownOpen ? "rotate-180" : "rotate-0"
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                  
+                  {/* Name */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-bold">{user?.name}</span>
+                    <svg
+                      className={`w-4 h-4 text-cyan-400 transition-transform duration-300 ${
+                        dropdownOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
                 </button>
 
-                {/* Dropdown */}
+                {/* Enhanced Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl transition-all duration-200">
-                    <div className="p-4 border-b border-white/10">
-                      <p className="text-white font-bold">{user?.name}</p>
-                      <p className="text-slate-400 text-sm">{user?.email}</p>
+                  <div className="absolute right-0 mt-3 w-72 bg-slate-900/95 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-fadeIn">
+                    {/* User Info Header */}
+                    <div className="p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-b border-white/10">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-white font-bold text-lg">{user?.name}</p>
+                          <p className="text-cyan-400 text-sm">{user?.email}</p>
+                        </div>
+                      </div>
                     </div>
+                    
+                    {/* Menu Items */}
                     <div className="p-2">
                       {isAdmin() && (
                         <Link
                           to="/admin/dashboard"
                           onClick={() => setDropdownOpen(false)}
-                          className="block px-4 py-2 text-purple-400 hover:bg-purple-500/10 rounded-lg transition-all"
+                          className="group flex items-center gap-3 px-4 py-3 text-purple-400 hover:bg-purple-500/10 rounded-xl transition-all duration-200 mb-1"
                         >
-                          🔧 Admin Dashboard
+                          <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                            <span className="text-lg">🔧</span>
+                          </div>
+                          <div>
+                            <p className="font-bold">Admin Dashboard</p>
+                            <p className="text-xs text-purple-300/70">Manage content</p>
+                          </div>
                         </Link>
                       )}
 
                       <Link
                         to="/events"
                         onClick={() => setDropdownOpen(false)}
-                        className="block px-4 py-2 text-slate-300 hover:bg-white/5 rounded-lg transition-all"
+                        className="group flex items-center gap-3 px-4 py-3 text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all duration-200 mb-1"
                       >
-                        📅 My Events
+                        <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                          <span className="text-lg">📅</span>
+                        </div>
+                        <div>
+                          <p className="font-bold">My Events</p>
+                          <p className="text-xs text-cyan-300/70">View registrations</p>
+                        </div>
                       </Link>
+
+                      <div className="my-2 border-t border-white/10"></div>
 
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                        className="group w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                       >
-                        🚪 Logout
+                        <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                          <span className="text-lg">🚪</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="font-bold">Logout</p>
+                          <p className="text-xs text-red-300/70">Sign out of account</p>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -173,26 +211,45 @@ function Navbar() {
               <div className="border-t border-white/10 pt-4 mt-2">
                 {isAuthenticated ? (
                   <>
-                    <div className="mb-4 p-3 bg-white/5 rounded-xl">
-                      <p className="text-white font-bold">{user?.name}</p>
-                      <p className="text-slate-400 text-sm">{user?.email}</p>
+                    {/* Mobile User Card */}
+                    <div className="mb-4 p-4 bg-gradient-to-br from-white/5 to-white/10 border border-white/10 rounded-2xl">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-white font-bold">{user?.name}</p>
+                          <p className="text-cyan-400 text-sm">{user?.email}</p>
+                        </div>
+                      </div>
                     </div>
 
                     {isAdmin() && (
                       <Link
                         to="/admin/dashboard"
                         onClick={() => setIsOpen(false)}
-                        className="block mb-2 px-4 py-2 text-purple-400 bg-purple-500/10 rounded-lg font-semibold"
+                        className="flex items-center gap-3 mb-2 px-4 py-3 text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-xl font-semibold hover:bg-purple-500/20 transition-all"
                       >
-                        🔧 Admin Dashboard
+                        <span className="text-lg">🔧</span>
+                        <span>Admin Dashboard</span>
                       </Link>
                     )}
 
+                    <Link
+                      to="/events"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 mb-2 px-4 py-3 text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 rounded-xl font-semibold hover:bg-cyan-500/20 transition-all"
+                    >
+                      <span className="text-lg">📅</span>
+                      <span>My Events</span>
+                    </Link>
+
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 bg-red-500/10 text-red-400 rounded-lg font-semibold"
+                      className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-semibold hover:bg-red-500/20 transition-all"
                     >
-                      Logout
+                      <span className="text-lg">🚪</span>
+                      <span>Logout</span>
                     </button>
                   </>
                 ) : (
@@ -218,6 +275,22 @@ function Navbar() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </nav>
   );
 }
