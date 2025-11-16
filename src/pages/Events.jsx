@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { eventsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Sparkles } from 'lucide-react';
 
 function Events() {
   const { user } = useAuth();
@@ -56,7 +56,7 @@ function Events() {
         <Navbar />
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading events...</p>
+          <p className="text-slate-300">Loading events...</p>
         </div>
       </div>
     );
@@ -73,7 +73,7 @@ function Events() {
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         
         {/* Floating particles */}
-        {[...Array(20)].map((_, i) => (
+        {[...Array(30)].map((_, i) => (
           <div
             key={i}
             className="absolute rounded-full bg-cyan-400/20"
@@ -92,13 +92,13 @@ function Events() {
       <div className="relative z-10 px-6 py-20">
         {/* Header */}
         <div className="max-w-7xl mx-auto mb-16 text-center">
-          <div className="inline-block px-6 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-400/30 rounded-full mb-6">
+          <div className="inline-block px-6 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-400/40 rounded-full mb-6">
             <p className="text-cyan-300 text-sm font-semibold tracking-widest">CONNECT & LEARN</p>
           </div>
           <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-6">
             Upcoming Events
           </h1>
-          <p className="text-lg text-slate-400 max-w-3xl mx-auto">
+          <p className="text-lg text-slate-300 max-w-3xl mx-auto">
             Register for exciting tech events, workshops, and hackathons. Join our community and enhance your skills.
           </p>
           <div className="w-32 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mt-8"></div>
@@ -114,7 +114,7 @@ function Events() {
                 className={`px-8 py-3 rounded-full font-bold capitalize transition-all duration-300 ${
                   filter === status
                     ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-400/50 scale-105'
-                    : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:border-cyan-400/50'
+                    : 'bg-white/10 text-slate-200 border border-white/20 hover:bg-white/15 hover:border-cyan-400/60'
                 }`}
               >
                 {status}
@@ -133,10 +133,10 @@ function Events() {
 
           {events.length === 0 ? (
             <div className="text-center py-20">
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12">
-                <Calendar className="w-24 h-24 mx-auto mb-6 text-slate-500" />
+              <div className="bg-white/8 backdrop-blur-sm border border-white/20 rounded-3xl p-12">
+                <Calendar className="w-24 h-24 mx-auto mb-6 text-slate-400" strokeWidth={1.5} />
                 <h3 className="text-2xl font-black text-white mb-2">No Events Found</h3>
-                <p className="text-slate-400">Check back soon for exciting upcoming events!</p>
+                <p className="text-slate-300">Check back soon for exciting upcoming events!</p>
               </div>
             </div>
           ) : (
@@ -148,7 +148,7 @@ function Events() {
                 return (
                   <div
                     key={event._id}
-                    className="group bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden hover:border-cyan-400/50 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-cyan-400/20"
+                    className="group bg-white/8 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden hover:border-cyan-400/60 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-cyan-400/30"
                     style={{ animation: `fadeInScale 0.6s ease-out ${index * 0.1}s both` }}
                   >
                     {/* Event Image */}
@@ -162,11 +162,12 @@ function Events() {
                       
                       {/* Status Badge */}
                       <div className="absolute top-4 right-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
                           event.status === 'upcoming' ? 'bg-cyan-500' :
                           event.status === 'ongoing' ? 'bg-green-500' :
                           'bg-slate-500'
                         }`}>
+                          <Sparkles size={12} />
                           {event.status}
                         </span>
                       </div>
@@ -189,19 +190,19 @@ function Events() {
                       </p>
 
                       <div className="space-y-2 mb-4 text-sm">
-                        <div className="flex items-center gap-2 text-slate-400">
+                        <div className="flex items-center gap-2 text-slate-300">
                           <Calendar className="text-cyan-400" size={16} />
                           <span>{new Date(event.date).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400">
+                        <div className="flex items-center gap-2 text-slate-300">
                           <Clock className="text-blue-400" size={16} />
                           <span>{event.time}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400">
+                        <div className="flex items-center gap-2 text-slate-300">
                           <MapPin className="text-indigo-400" size={16} />
                           <span>{event.venue}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400">
+                        <div className="flex items-center gap-2 text-slate-300">
                           <Users className="text-cyan-400" size={16} />
                           <span>
                             {event.registeredUsers?.length || 0} / {event.capacity} registered

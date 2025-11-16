@@ -59,7 +59,7 @@ function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative">
-                {/* User Profile Button with Visible Name */}
+                                {/* User Profile Button with Visible Name */}
                 <button
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="group flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-white/5 to-white/10 border border-white/20 rounded-2xl hover:border-cyan-400/50 hover:bg-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/20"

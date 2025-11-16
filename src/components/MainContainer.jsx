@@ -10,14 +10,15 @@ function MainContainer() {
   useEffect(() => {
     setIsVisible(true);
     
-    const newStars = Array.from({ length: 200 }, (_, i) => ({
+    // Increased number of stars and better distribution
+    const newStars = Array.from({ length: 350 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
-      delay: Math.random() * 10,
-      duration: 15 + Math.random() * 25,
-      size: 1 + Math.random() * 3.5,
-      opacity: 0.2 + Math.random() * 0.8,
+      delay: Math.random() * 15,
+      duration: 20 + Math.random() * 30,
+      size: 0.8 + Math.random() * 3,
+      opacity: 0.3 + Math.random() * 0.7,
     }));
     setStars(newStars);
   }, []);
@@ -44,11 +45,11 @@ function MainContainer() {
           ></div>
         ))}
 
-        <div className="absolute inset-0 opacity-[0.02]">
+        <div className="absolute inset-0 opacity-[0.03]">
           <div className="absolute inset-0" style={{
             backgroundImage: `
-              linear-gradient(90deg, rgba(34, 211, 238, 0.3) 1px, transparent 1px),
-              linear-gradient(0deg, rgba(34, 211, 238, 0.3) 1px, transparent 1px)
+              linear-gradient(90deg, rgba(34, 211, 238, 0.4) 1px, transparent 1px),
+              linear-gradient(0deg, rgba(34, 211, 238, 0.4) 1px, transparent 1px)
             `,
             backgroundSize: '100px 100px'
           }}></div>
@@ -58,7 +59,7 @@ function MainContainer() {
           <div className={`text-center transition-all duration-1000 max-w-7xl mx-auto ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             
             <div className="mb-8 inline-block animate-[fadeIn_0.8s_ease-out]">
-              <div className="px-8 py-3 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-400/30 rounded-full shadow-lg shadow-cyan-400/10">
+              <div className="px-8 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-400/40 rounded-full shadow-lg shadow-cyan-400/20">
                 <p className="text-cyan-300 text-sm font-semibold tracking-widest">WELCOME TO THE OFFICIAL BITSA WEBSITE</p>
               </div>
             </div>
@@ -74,7 +75,7 @@ function MainContainer() {
               <p className="text-3xl md:text-5xl text-white font-bold tracking-tight mb-6 leading-tight">
                 Information Systems & Computing Community
               </p>
-              <p className="text-lg md:text-xl text-slate-400 font-light leading-relaxed">
+              <p className="text-lg md:text-xl text-slate-300 font-light leading-relaxed">
                 Empowering students in IS & Computing to innovate, collaborate,<br />
                 and build the next generation of digital solutions
               </p>
@@ -96,11 +97,11 @@ function MainContainer() {
               {['Database Systems', 'Software Development', 'Systems Analysis', 'Web Technologies'].map((feature, index) => (
                 <div 
                   key={feature}
-                  className="flex items-center px-8 py-4 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-300 hover:scale-105 cursor-pointer group"
+                  className="flex items-center px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/15 hover:border-cyan-400/60 transition-all duration-300 hover:scale-105 cursor-pointer group"
                   style={{ animationDelay: `${0.7 + index * 0.1}s` }}
                 >
                   <div className="w-2 h-2 rounded-full bg-cyan-400 mr-3 group-hover:animate-pulse"></div>
-                  <p className="text-slate-300 text-base font-medium group-hover:text-cyan-400 transition-colors">{feature}</p>
+                  <p className="text-slate-200 text-base font-medium group-hover:text-cyan-300 transition-colors">{feature}</p>
                 </div>
               ))}
             </div>
@@ -108,46 +109,46 @@ function MainContainer() {
             <div className="w-full mb-16 animate-[fadeIn_1s_ease-out_0.9s_both]">
               <div className="flex flex-col md:flex-row justify-center items-stretch gap-8 max-w-7xl mx-auto">
                 
-                <div className="flex-1 group relative bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md border border-white/10 rounded-3xl p-10 hover:border-cyan-400/50 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 rounded-3xl transition-all duration-500"></div>
+                <div className="flex-1 group relative bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-md border border-white/20 rounded-3xl p-10 hover:border-cyan-400/60 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-400/30">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/15 group-hover:to-blue-500/15 rounded-3xl transition-all duration-500"></div>
                   <div className="relative flex flex-col items-center text-center h-full">
-                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-cyan-400/20">
+                    <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-cyan-400/30">
                       <svg className="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-cyan-400 transition-colors">Innovation</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed flex-grow">
+                    <p className="text-slate-300 text-sm leading-relaxed flex-grow">
                       Foster creativity and breakthrough thinking through collaborative projects and hackathons
                     </p>
                   </div>
                 </div>
 
-                <div className="flex-1 group relative bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md border border-white/10 rounded-3xl p-10 hover:border-blue-400/50 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-400/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/10 group-hover:to-indigo-500/10 rounded-3xl transition-all duration-500"></div>
+                <div className="flex-1 group relative bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-md border border-white/20 rounded-3xl p-10 hover:border-blue-400/60 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-400/30">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/15 group-hover:to-indigo-500/15 rounded-3xl transition-all duration-500"></div>
                   <div className="relative flex flex-col items-center text-center h-full">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-400/20">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-blue-400/30">
                       <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                       </svg>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">Learning</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed flex-grow">
+                    <p className="text-slate-300 text-sm leading-relaxed flex-grow">
                       Expand your skills with workshops, mentorship programs, and hands-on tech experiences
                     </p>
                   </div>
                 </div>
 
-                <div className="flex-1 group relative bg-gradient-to-br from-white/5 to-transparent backdrop-blur-md border border-white/10 rounded-3xl p-10 hover:border-indigo-400/50 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-indigo-400/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 rounded-3xl transition-all duration-500"></div>
+                <div className="flex-1 group relative bg-gradient-to-br from-white/8 to-white/3 backdrop-blur-md border border-white/20 rounded-3xl p-10 hover:border-indigo-400/60 transition-all duration-500 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-indigo-400/30">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/15 group-hover:to-purple-500/15 rounded-3xl transition-all duration-500"></div>
                   <div className="relative flex flex-col items-center text-center h-full">
-                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-indigo-400/20">
+                    <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-indigo-400/30">
                       <svg className="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-indigo-400 transition-colors">Community</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed flex-grow">
+                    <p className="text-slate-300 text-sm leading-relaxed flex-grow">
                       Build lasting connections with like-minded tech enthusiasts and future industry leaders
                     </p>
                   </div>
@@ -165,16 +166,16 @@ function MainContainer() {
 
         {/* What You'll Learn Section */}
         <div className="relative z-10 px-6 py-20 lg:px-8">
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-500/5 via-transparent to-blue-500/5 backdrop-blur-md rounded-xl" />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-500/8 via-transparent to-blue-500/8 backdrop-blur-md rounded-xl" />
 
           <div className="mx-auto max-w-5xl text-center">
-            <div className="inline-block px-6 py-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-md border border-cyan-400/30 rounded-full mb-6">
+            <div className="inline-block px-6 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 backdrop-blur-md border border-cyan-400/40 rounded-full mb-6">
               <p className="text-cyan-300 text-sm font-semibold tracking-widest">COMPREHENSIVE CURRICULUM</p>
             </div>
             <h2 className="text-5xl font-black tracking-tight text-white sm:text-6xl mb-6">
               What You'll Learn
             </h2>
-            <p className="text-lg leading-8 text-slate-400 max-w-3xl mx-auto">
+            <p className="text-lg leading-8 text-slate-300 max-w-3xl mx-auto">
               Master cutting-edge technologies and build real-world skills that prepare you for a successful career in Information Systems and Computing.
             </p>
             <div className="w-32 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mt-8"></div>
@@ -239,20 +240,20 @@ function MainContainer() {
             ].map((feature, index) => (
               <div 
                 key={feature.name} 
-                className="group flex flex-col items-start rounded-3xl bg-white/[0.02] backdrop-blur-sm border border-white/10 p-8 shadow-lg transition-all duration-500 hover:scale-105 hover:border-cyan-400/50 hover:shadow-2xl hover:shadow-cyan-400/20"
+                className="group flex flex-col items-start rounded-3xl bg-white/[0.06] backdrop-blur-sm border border-white/20 p-8 shadow-lg transition-all duration-500 hover:scale-105 hover:border-cyan-400/60 hover:shadow-2xl hover:shadow-cyan-400/30"
                 style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both` }}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/10 group-hover:to-blue-500/10 rounded-3xl transition-all duration-500 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-blue-500/0 group-hover:from-cyan-500/15 group-hover:to-blue-500/15 rounded-3xl transition-all duration-500 pointer-events-none"></div>
                 
                 <div className="relative w-full">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                     <feature.icon className="h-7 w-7 text-cyan-400 group-hover:text-cyan-300 transition-colors" aria-hidden="true" />
                   </div>
 
                   <h3 className="text-2xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors">
                     {feature.name}
                   </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed group-hover:text-slate-300 transition-colors">
+                  <p className="text-slate-300 text-sm leading-relaxed group-hover:text-slate-200 transition-colors">
                     {feature.description}
                   </p>
 
