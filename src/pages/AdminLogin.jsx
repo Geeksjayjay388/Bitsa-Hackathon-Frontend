@@ -11,6 +11,7 @@ function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [wakingUp, setWakingUp] = useState(false);
   
   const { login, user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -33,27 +34,42 @@ function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setWakingUp(true);
     setError('');
 
     console.log('🔄 Attempting login with:', formData.email);
 
-    const result = await login(formData);
-    
-    if (result.success) {
-      console.log('✅ Login successful, user:', result.user);
+    // Show wake-up message for first 10 seconds
+    const wakeTimer = setTimeout(() => {
+      setWakingUp(false);
+    }, 10000);
+
+    try {
+      const result = await login(formData);
       
-      // Check if user is admin
-      if (result.user.role === 'admin') {
-        console.log('✅ Admin verified, redirecting...');
-        navigate('/admin/dashboard');
+      clearTimeout(wakeTimer);
+      setWakingUp(false);
+      
+      if (result.success) {
+        console.log('✅ Login successful, user:', result.user);
+        
+        if (result.user.role === 'admin') {
+          console.log('✅ Admin verified, redirecting...');
+          navigate('/admin/dashboard');
+        } else {
+          setError('Access denied. Admin privileges required.');
+          console.warn('⚠️ User is not admin');
+        }
       } else {
-        setError('Access denied. Admin privileges required.');
-        console.warn('⚠️ User is not admin');
+        const errorMsg = result.error || 'Invalid credentials. Please try again.';
+        setError(errorMsg);
+        console.error('❌ Login failed:', errorMsg);
       }
-    } else {
-      const errorMsg = result.error || 'Invalid credentials. Please try again.';
-      setError(errorMsg);
-      console.error('❌ Login failed:', errorMsg);
+    } catch (err) {
+      clearTimeout(wakeTimer);
+      setWakingUp(false);
+      setError('Connection error. Please check if the backend is running.');
+      console.error('❌ Login error:', err);
     }
     
     setLoading(false);
@@ -86,6 +102,19 @@ function AdminLogin() {
 
           <h3 className="text-2xl font-black text-white mb-2">Admin Login</h3>
           <p className="text-slate-400 mb-6">Access the admin dashboard</p>
+
+          {/* Wake-up Notice */}
+          {wakingUp && (
+            <div className="mb-6 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <div>
+                  <p className="text-cyan-400 text-sm font-semibold">Waking up backend server...</p>
+                  <p className="text-slate-400 text-xs mt-1">This may take 30-60 seconds on first request</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl animate-shake">
@@ -151,7 +180,7 @@ function AdminLogin() {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Signing in...</span>
+                  <span>{wakingUp ? 'Waking up server...' : 'Signing in...'}</span>
                 </>
               ) : (
                 <>

@@ -133,7 +133,7 @@ function Navbar() {
                         className="group flex items-center gap-3 px-4 py-3 text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all duration-200 mb-1"
                       >
                         <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                          <span className="text-lg">📅</span>
+                          
                         </div>
                         <div>
                           <p className="font-bold">My Events</p>
@@ -148,7 +148,7 @@ function Navbar() {
                         className="group w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                       >
                         <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
-                          <span className="text-lg">🚪</span>
+                          
                         </div>
                         <div className="text-left">
                           <p className="font-bold">Logout</p>
