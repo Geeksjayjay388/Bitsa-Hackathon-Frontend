@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Target, Code, Users } from 'lucide-react';
 
 function Login() {
   const navigate = useNavigate();
@@ -110,13 +111,13 @@ function Login() {
                 {/* Features */}
                 <div className="space-y-4">
                   {[
-                    { icon: '🎯', text: 'Access exclusive events' },
-                    { icon: '💻', text: 'Join hackathons & workshops' },
-                    { icon: '🤝', text: 'Network with professionals' }
+                    { icon: Target, text: 'Access exclusive events' },
+                    { icon: Code, text: 'Join hackathons & workshops' },
+                    { icon: Users, text: 'Network with professionals' }
                   ].map((feature, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <span className="text-xl">{feature.icon}</span>
+                        <feature.icon className="text-cyan-400" size={20} />
                       </div>
                       <span className="text-slate-300 font-semibold">{feature.text}</span>
                     </div>

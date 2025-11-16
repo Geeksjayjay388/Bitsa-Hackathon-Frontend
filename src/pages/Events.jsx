@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { eventsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 
 function Events() {
   const { user } = useAuth();
@@ -133,9 +134,7 @@ function Events() {
           {events.length === 0 ? (
             <div className="text-center py-20">
               <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12">
-                <svg className="w-24 h-24 mx-auto mb-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+                <Calendar className="w-24 h-24 mx-auto mb-6 text-slate-500" />
                 <h3 className="text-2xl font-black text-white mb-2">No Events Found</h3>
                 <p className="text-slate-400">Check back soon for exciting upcoming events!</p>
               </div>
@@ -191,19 +190,19 @@ function Events() {
 
                       <div className="space-y-2 mb-4 text-sm">
                         <div className="flex items-center gap-2 text-slate-400">
-                          <span>📅</span>
+                          <Calendar className="text-cyan-400" size={16} />
                           <span>{new Date(event.date).toLocaleDateString()}</span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400">
-                          <span>🕐</span>
+                          <Clock className="text-blue-400" size={16} />
                           <span>{event.time}</span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400">
-                          <span>📍</span>
+                          <MapPin className="text-indigo-400" size={16} />
                           <span>{event.venue}</span>
                         </div>
                         <div className="flex items-center gap-2 text-slate-400">
-                          <span>👥</span>
+                          <Users className="text-cyan-400" size={16} />
                           <span>
                             {event.registeredUsers?.length || 0} / {event.capacity} registered
                           </span>
@@ -261,6 +260,13 @@ function Events() {
             transform: translateY(-20px) translateX(10px);
             opacity: 0.6;
           }
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
       

@@ -645,7 +645,7 @@ function AdminDashboard() {
                       <select
                         value={formData.category || 'Competition'}
                         onChange={(e) => setFormData({...formData, category: e.target.value})}
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-cyan-400/50 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:border-cyan-400/50 focus:outline-none"
                       >
                         <option value="Competition">Competition</option>
                         <option value="Workshop">Workshop</option>
@@ -659,7 +659,7 @@ function AdminDashboard() {
                     <select
                       value={formData.status || 'upcoming'}
                       onChange={(e) => setFormData({...formData, status: e.target.value})}
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-cyan-400/50 focus:outline-none"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:border-cyan-400/50 focus:outline-none"
                     >
                       <option value="upcoming">Upcoming</option>
                       <option value="ongoing">Ongoing</option>
@@ -709,7 +709,7 @@ function AdminDashboard() {
                         value={formData.category || 'tutorial'}
                         onChange={(e) => setFormData({...formData, category: e.target.value})}
                         required
-                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-cyan-400/50 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:border-cyan-400/50 focus:outline-none"
                       >
                         <option value="tutorial">Tutorial</option>
                         <option value="article">Article</option>
@@ -814,7 +814,7 @@ function AdminDashboard() {
                       value={formData.category || 'Hackathons'}
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
                       required
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-cyan-400/50 focus:outline-none"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:border-cyan-400/50 focus:outline-none"
                     >
                       <option value="Hackathons">Hackathons</option>
                       <option value="Workshops">Workshops</option>

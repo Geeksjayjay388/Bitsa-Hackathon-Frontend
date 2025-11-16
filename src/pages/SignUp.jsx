@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Sparkles, GraduationCap, Trophy, Globe } from 'lucide-react';
 
 function SignUp() {
   const navigate = useNavigate();
@@ -155,14 +156,14 @@ function SignUp() {
                 {/* Benefits */}
                 <div className="space-y-4">
                   {[
-                    { icon: '✨', text: 'Free membership for all students' },
-                    { icon: '🎓', text: 'Access to premium workshops' },
-                    { icon: '🏆', text: 'Participate in hackathons' },
-                    { icon: '🌐', text: 'Connect with industry leaders' }
+                    { icon: Sparkles, text: 'Free membership for all students' },
+                    { icon: GraduationCap, text: 'Access to premium workshops' },
+                    { icon: Trophy, text: 'Participate in hackathons' },
+                    { icon: Globe, text: 'Connect with industry leaders' }
                   ].map((benefit, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <span className="text-xl">{benefit.icon}</span>
+                        <benefit.icon className="text-cyan-400" size={20} />
                       </div>
                       <span className="text-slate-300 font-semibold">{benefit.text}</span>
                     </div>
