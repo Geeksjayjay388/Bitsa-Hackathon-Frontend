@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Settings, LayoutDashboard, Calendar, LogOut } from "lucide-react";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -123,7 +124,7 @@ function Navbar() {
                           className="group flex items-center gap-3 px-4 py-3 text-purple-400 hover:bg-purple-500/10 rounded-xl transition-all duration-200 mb-1"
                         >
                           <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                            <span className="text-lg">🔧</span>
+                            <Settings size={18} />
                           </div>
                           <div>
                             <p className="font-bold">Admin Dashboard</p>
@@ -138,7 +139,7 @@ function Navbar() {
                         className="group flex items-center gap-3 px-4 py-3 text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all duration-200 mb-1"
                       >
                         <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                          <span className="text-lg">📊</span>
+                          <LayoutDashboard size={18} />
                         </div>
                         <div>
                           <p className="font-bold">Dashboard</p>
@@ -152,7 +153,7 @@ function Navbar() {
                         className="group flex items-center gap-3 px-4 py-3 text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all duration-200 mb-1"
                       >
                         <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                          <span className="text-lg">📅</span>
+                          <Calendar size={18} />
                         </div>
                         <div>
                           <p className="font-bold">My Events</p>
@@ -167,7 +168,7 @@ function Navbar() {
                         className="group w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                       >
                         <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
-                          <span className="text-lg">🚪</span>
+                          <LogOut size={18} />
                         </div>
                         <div className="text-left">
                           <p className="font-bold">Logout</p>
@@ -249,7 +250,7 @@ function Navbar() {
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-3 mb-2 px-4 py-3 text-purple-400 bg-purple-500/10 border border-purple-500/20 rounded-xl font-semibold hover:bg-purple-500/20 transition-all"
                       >
-                        <span className="text-lg">🔧</span>
+                        <Settings size={20} />
                         <span>Admin Dashboard</span>
                       </Link>
                     )}
@@ -259,7 +260,7 @@ function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 mb-2 px-4 py-3 text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-xl font-semibold hover:bg-blue-500/20 transition-all"
                     >
-                      <span className="text-lg">📊</span>
+                      <LayoutDashboard size={20} />
                       <span>Dashboard</span>
                     </Link>
 
@@ -268,7 +269,7 @@ function Navbar() {
                       onClick={() => setIsOpen(false)}
                       className="flex items-center gap-3 mb-2 px-4 py-3 text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 rounded-xl font-semibold hover:bg-cyan-500/20 transition-all"
                     >
-                      <span className="text-lg">📅</span>
+                      <Calendar size={20} />
                       <span>My Events</span>
                     </Link>
 
@@ -276,7 +277,7 @@ function Navbar() {
                       onClick={handleLogout}
                       className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-semibold hover:bg-red-500/20 transition-all"
                     >
-                      <span className="text-lg">🚪</span>
+                      <LogOut size={20} />
                       <span>Logout</span>
                     </button>
                   </>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { blogsAPI } from '../services/api';
 import { BookOpen, Calendar, Clock, User, Star, TrendingUp, Award } from 'lucide-react';
 
 function Blog() {
+  const navigate = useNavigate();
   const [selectedTag, setSelectedTag] = useState('All');
   const [blogPosts, setBlogPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +47,11 @@ function Blog() {
       'guide': 'from-indigo-500 to-purple-500'
     };
     return colors[tag] || 'from-cyan-500 to-blue-500';
+  };
+
+  // Function to handle navigation to blog detail
+  const handleReadMore = (blogId) => {
+    navigate(`/blog/${blogId}`);
   };
 
   if (loading) {
@@ -121,7 +128,7 @@ function Blog() {
                 <div className="relative group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden hover:border-cyan-400/60 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-400/30">
                   <div className="grid md:grid-cols-2 gap-8 p-8">
                     {/* Image */}
-                    <div className="relative h-80 md:h-full rounded-2xl overflow-hidden">
+                    <div className="relative h-80 md:h-full rounded-2xl overflow-hidden cursor-pointer" onClick={() => handleReadMore(featuredPost._id)}>
                       <img 
                         src={featuredPost.imageUrl || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"} 
                         alt={featuredPost.title}
@@ -142,7 +149,7 @@ function Blog() {
                           {featuredPost.category}
                         </span>
                       </div>
-                      <h2 className="text-4xl font-black text-white mb-4 group-hover:text-cyan-400 transition-colors">
+                      <h2 className="text-4xl font-black text-white mb-4 group-hover:text-cyan-400 transition-colors cursor-pointer" onClick={() => handleReadMore(featuredPost._id)}>
                         {featuredPost.title}
                       </h2>
                       <p className="text-slate-300 text-lg leading-relaxed mb-6">
@@ -167,7 +174,10 @@ function Blog() {
                           {featuredPost.readTime || '5 min read'}
                         </span>
                       </div>
-                      <button className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 group-hover:scale-105">
+                      <button 
+                        onClick={() => handleReadMore(featuredPost._id)}
+                        className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/50 group-hover:scale-105"
+                      >
                         Read Full Article
                       </button>
                     </div>
@@ -186,7 +196,7 @@ function Blog() {
                     style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both` }}
                   >
                     {/* Image */}
-                    <div className="relative h-56 overflow-hidden">
+                    <div className="relative h-56 overflow-hidden cursor-pointer" onClick={() => handleReadMore(post._id)}>
                       <img 
                         src={post.imageUrl || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"} 
                         alt={post.title}
@@ -202,7 +212,7 @@ function Blog() {
 
                     {/* Content */}
                     <div className="p-6">
-                      <h3 className="text-xl font-black text-white mb-3 group-hover:text-cyan-400 transition-colors line-clamp-2">
+                      <h3 className="text-xl font-black text-white mb-3 group-hover:text-cyan-400 transition-colors line-clamp-2 cursor-pointer" onClick={() => handleReadMore(post._id)}>
                         {post.title}
                       </h3>
                       <p className="text-slate-300 text-sm leading-relaxed mb-4 line-clamp-3">
@@ -232,7 +242,10 @@ function Blog() {
                         </span>
                       </div>
 
-                      <button className="w-full mt-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-cyan-500 hover:border-cyan-500 transition-all duration-300 group-hover:scale-105">
+                      <button 
+                        onClick={() => handleReadMore(post._id)}
+                        className="w-full mt-4 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-cyan-500 hover:border-cyan-500 transition-all duration-300 group-hover:scale-105"
+                      >
                         Read More
                       </button>
                     </div>

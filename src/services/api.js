@@ -61,6 +61,7 @@ export const blogsAPI = {
     return apiCall(`/blogs${query ? `?${query}` : ''}`);
   },
   getOne: (id) => apiCall(`/blogs/${id}`),
+  getById: (id) => apiCall(`/blogs/${id}`), // Added this method for BlogDetail component
   like: (id) => apiCall(`/blogs/${id}/like`, { method: 'POST' }, true),
   unlike: (id) => apiCall(`/blogs/${id}/unlike`, { method: 'DELETE' }, true),
 };

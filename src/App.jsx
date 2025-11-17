@@ -11,6 +11,9 @@ import SignUp from "./pages/SignUp";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard"; // ADD THIS IMPORT
+import BlogDetail from './pages/BlogDetail';
+
+
 
 function App() {
   return (
@@ -24,7 +27,8 @@ function App() {
       <Route path="/contacts" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/blog/:id" element={<BlogDetail />} />
       {/* Protected User Routes */}
       <Route 
         path="/dashboard" 
