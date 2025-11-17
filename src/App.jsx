@@ -10,27 +10,38 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard"; // ADD THIS IMPORT
 
 function App() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Home/>} />
-      <Route path="/events" element={<Events/>} />
-      <Route path="/gallery" element={<Gallery/>} /> 
-      <Route path="/blog" element={<Blog/>} />
-      <Route path="/about" element={<About/>} />
-      <Route path="/contacts" element={<Contact/>} />
-      <Route path="/login" element={<Login/>} />
-      <Route path="/signup" element={<SignUp/>} />
-      
+      <Route path="/" element={<Home />} />
+      <Route path="/events" element={<Events />} />
+      <Route path="/gallery" element={<Gallery />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contacts" element={<Contact />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignUp />} />
+
+      {/* Protected User Routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <UserDashboard />
+          </ProtectedRoute>
+        } 
+      />
+
       {/* Admin Routes */}
-      <Route path="/admin/login" element={<AdminLogin/>} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route 
         path="/admin/dashboard" 
         element={
           <AdminRoute>
-            <AdminDashboard/>
+            <AdminDashboard />
           </AdminRoute>
         } 
       />

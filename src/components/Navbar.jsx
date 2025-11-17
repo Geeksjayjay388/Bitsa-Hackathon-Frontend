@@ -25,6 +25,9 @@ function Navbar() {
     { name: "Contact", path: "/contacts" },
   ];
 
+  // Get display name - fallback to email or "User" if name not available
+  const displayName = user?.name || user?.email?.split('@')[0] || "User";
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -59,7 +62,7 @@ function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <div className="relative">
-                                {/* User Profile Button with Visible Name */}
+                {/* User Profile Button with Visible Name */}
                 <button
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="group flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-white/5 to-white/10 border border-white/20 rounded-2xl hover:border-cyan-400/50 hover:bg-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-400/20"
@@ -68,13 +71,15 @@ function Navbar() {
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full blur-sm opacity-50 group-hover:opacity-100 transition-opacity"></div>
                     <div className="relative w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                      {user?.name?.charAt(0).toUpperCase()}
+                      {displayName.charAt(0).toUpperCase()}
                     </div>
                   </div>
                   
-                  {/* Name */}
+                  {/* Name - with better styling */}
                   <div className="flex items-center gap-2">
-                    <span className="text-white font-bold">{user?.name}</span>
+                    <span className="text-white font-bold text-base whitespace-nowrap">
+                      {displayName}
+                    </span>
                     <svg
                       className={`w-4 h-4 text-cyan-400 transition-transform duration-300 ${
                         dropdownOpen ? "rotate-180" : "rotate-0"
@@ -100,10 +105,10 @@ function Navbar() {
                     <div className="p-5 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-b border-white/10">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
-                          {user?.name?.charAt(0).toUpperCase()}
+                          {displayName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-white font-bold text-lg">{user?.name}</p>
+                          <p className="text-white font-bold text-lg">{displayName}</p>
                           <p className="text-cyan-400 text-sm">{user?.email}</p>
                         </div>
                       </div>
@@ -128,12 +133,26 @@ function Navbar() {
                       )}
 
                       <Link
+                        to="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="group flex items-center gap-3 px-4 py-3 text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all duration-200 mb-1"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                          <span className="text-lg">📊</span>
+                        </div>
+                        <div>
+                          <p className="font-bold">Dashboard</p>
+                          <p className="text-xs text-blue-300/70">View your dashboard</p>
+                        </div>
+                      </Link>
+
+                      <Link
                         to="/events"
                         onClick={() => setDropdownOpen(false)}
                         className="group flex items-center gap-3 px-4 py-3 text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all duration-200 mb-1"
                       >
                         <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                          
+                          <span className="text-lg">📅</span>
                         </div>
                         <div>
                           <p className="font-bold">My Events</p>
@@ -148,7 +167,7 @@ function Navbar() {
                         className="group w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                       >
                         <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
-                          
+                          <span className="text-lg">🚪</span>
                         </div>
                         <div className="text-left">
                           <p className="font-bold">Logout</p>
@@ -215,10 +234,10 @@ function Navbar() {
                     <div className="mb-4 p-4 bg-gradient-to-br from-white/5 to-white/10 border border-white/10 rounded-2xl">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold shadow-lg">
-                          {user?.name?.charAt(0).toUpperCase()}
+                          {displayName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-white font-bold">{user?.name}</p>
+                          <p className="text-white font-bold">{displayName}</p>
                           <p className="text-cyan-400 text-sm">{user?.email}</p>
                         </div>
                       </div>
@@ -234,6 +253,15 @@ function Navbar() {
                         <span>Admin Dashboard</span>
                       </Link>
                     )}
+
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 mb-2 px-4 py-3 text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-xl font-semibold hover:bg-blue-500/20 transition-all"
+                    >
+                      <span className="text-lg">📊</span>
+                      <span>Dashboard</span>
+                    </Link>
 
                     <Link
                       to="/events"

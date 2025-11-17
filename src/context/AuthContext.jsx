@@ -11,6 +11,21 @@ export const useAuth = () => {
   return context;
 };
 
+// ✅ Helper function to normalize user data
+const normalizeUserData = (userData) => {
+  if (!userData) return null;
+  
+  return {
+    ...userData,
+    // Ensure both id and _id exist for compatibility
+    id: userData.id || userData._id,
+    _id: userData._id || userData.id,
+    // Ensure name field exists
+    name: userData.name || userData.fullName,
+    fullName: userData.fullName || userData.name
+  };
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,24 +42,36 @@ export const AuthProvider = ({ children }) => {
 
     if (token && storedUser) {
       try {
-        // Verify token is still valid by fetching current user
-        const response = await authAPI.getCurrentUser();
+        // Parse and normalize stored user
+        const parsedUser = JSON.parse(storedUser);
+        const normalizedUser = normalizeUserData(parsedUser);
         
-        // Handle different response structures
-        const userData = response.data?.user || response.user || response.data;
-        
-        if (userData) {
-          setUser(userData);
-          setIsAuthenticated(true);
+        // Set user immediately for faster UI
+        setUser(normalizedUser);
+        setIsAuthenticated(true);
+
+        // Verify token is still valid
+        try {
+          const response = await authAPI.getCurrentUser();
           
-          // Update localStorage with fresh user data
-          localStorage.setItem('user', JSON.stringify(userData));
-        } else {
-          throw new Error('Invalid user data received');
+          // Handle different response structures
+          const userData = response.data?.user || response.user || response.data;
+          
+          if (userData) {
+            const freshNormalizedUser = normalizeUserData(userData);
+            setUser(freshNormalizedUser);
+            localStorage.setItem('user', JSON.stringify(freshNormalizedUser));
+          }
+        } catch (verifyError) {
+          console.warn('⚠️ Token verification failed:', verifyError);
+          // Only clear if it's a 401/403 error
+          if (verifyError.response?.status === 401 || verifyError.response?.status === 403) {
+            throw verifyError;
+          }
+          // Otherwise keep using cached data
         }
       } catch (error) {
         console.error('❌ Auth check failed:', error);
-        // Token is invalid, clear storage
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
@@ -62,15 +89,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       
-      // Check if login was successful
       if (response.success && response.token) {
+        const normalizedUser = normalizeUserData(response.user);
+        
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        setUser(response.user);
+        localStorage.setItem('user', JSON.stringify(normalizedUser));
+        setUser(normalizedUser);
         setIsAuthenticated(true);
         
-        console.log('✅ Login successful:', response.user);
-        return { success: true, user: response.user };
+        console.log('✅ Login successful:', normalizedUser);
+        return { success: true, user: normalizedUser };
       } else {
         throw new Error(response.message || 'Login failed');
       }
@@ -87,15 +115,16 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.signup(userData);
       
-      // Check if signup was successful
       if (response.success && response.token) {
+        const normalizedUser = normalizeUserData(response.user);
+        
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        setUser(response.user);
+        localStorage.setItem('user', JSON.stringify(normalizedUser));
+        setUser(normalizedUser);
         setIsAuthenticated(true);
         
-        console.log('✅ Signup successful:', response.user);
-        return { success: true, user: response.user };
+        console.log('✅ Signup successful:', normalizedUser);
+        return { success: true, user: normalizedUser };
       } else {
         throw new Error(response.message || 'Signup failed');
       }
@@ -123,8 +152,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('user', JSON.stringify(updatedUserData));
+    const normalizedUser = normalizeUserData(updatedUserData);
+    setUser(normalizedUser);
+    localStorage.setItem('user', JSON.stringify(normalizedUser));
   };
 
   const isAdmin = () => {
@@ -143,5 +173,5 @@ export const AuthProvider = ({ children }) => {
     updateUser
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 };
