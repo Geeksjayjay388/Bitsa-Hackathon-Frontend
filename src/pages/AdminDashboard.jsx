@@ -54,14 +54,15 @@ function AdminDashboard() {
     }
   };
 
-  const fetchFeedback = async () => {
-    try {
-      const response = await adminAPI.getAllFeedback();
-      setFeedback(response.data || []);
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-    }
-  };
+ const fetchFeedback = async () => {
+  try {
+    // CHANGED: Use the new admin endpoint
+    const response = await adminAPI.getAllFeedback(); // Make sure this points to /api/feedback/admin/all
+    setFeedback(response.data || []);
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+  }
+};
 
   const handleLogout = () => {
     logout();

@@ -1,16 +1,14 @@
 const API_URL = 'https://bitsa-website-backend.onrender.com/api';
 
 // Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('token');
-};
+const getAuthToken = () => localStorage.getItem('token');
 
 // Helper function for API calls
-const apiCall = async (endpoint, options = {}) => {
+const apiCall = async (endpoint, options = {}, authRequired = false) => {
   const token = getAuthToken();
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(authRequired && token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -35,38 +33,13 @@ const apiCall = async (endpoint, options = {}) => {
 
 // ===== AUTH =====
 export const authAPI = {
-  // FIXED: Changed from /auth/signup to /auth/register to match backend
-  signup: (userData) => apiCall('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  }),
-
-  // Also adding register as alias for consistency
-  register: (userData) => apiCall('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  }),
-
-  login: (credentials) => apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(credentials),
-  }),
-
-  getCurrentUser: () => apiCall('/auth/me'),
-  
-  logout: () => apiCall('/auth/logout', {
-    method: 'POST',
-  }),
-
-  updateDetails: (userData) => apiCall('/auth/updatedetails', {
-    method: 'PUT',
-    body: JSON.stringify(userData),
-  }),
-
-  updatePassword: (passwordData) => apiCall('/auth/updatepassword', {
-    method: 'PUT',
-    body: JSON.stringify(passwordData),
-  }),
+  signup: (userData) => apiCall('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  register: (userData) => apiCall('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  login: (credentials) => apiCall('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  getCurrentUser: () => apiCall('/auth/me', {}, true),
+  logout: () => apiCall('/auth/logout', { method: 'POST' }, true),
+  updateDetails: (userData) => apiCall('/auth/updatedetails', { method: 'PUT', body: JSON.stringify(userData) }, true),
+  updatePassword: (passwordData) => apiCall('/auth/updatepassword', { method: 'PUT', body: JSON.stringify(passwordData) }, true),
 };
 
 // ===== EVENTS =====
@@ -75,18 +48,10 @@ export const eventsAPI = {
     const query = new URLSearchParams(params).toString();
     return apiCall(`/events${query ? `?${query}` : ''}`);
   },
-
   getOne: (id) => apiCall(`/events/${id}`),
-
-  register: (id) => apiCall(`/events/${id}/register`, {
-    method: 'POST',
-  }),
-
-  unregister: (id) => apiCall(`/events/${id}/unregister`, {
-    method: 'DELETE',
-  }),
-
-  getMyEvents: () => apiCall('/events/my/events'),
+  register: (id) => apiCall(`/events/${id}/register`, { method: 'POST' }, true),
+  unregister: (id) => apiCall(`/events/${id}/unregister`, { method: 'DELETE' }, true),
+  getMyEvents: () => apiCall('/events/my/events', {}, true),
 };
 
 // ===== BLOGS =====
@@ -95,16 +60,9 @@ export const blogsAPI = {
     const query = new URLSearchParams(params).toString();
     return apiCall(`/blogs${query ? `?${query}` : ''}`);
   },
-
   getOne: (id) => apiCall(`/blogs/${id}`),
-
-  like: (id) => apiCall(`/blogs/${id}/like`, {
-    method: 'POST',
-  }),
-
-  unlike: (id) => apiCall(`/blogs/${id}/unlike`, {
-    method: 'DELETE',
-  }),
+  like: (id) => apiCall(`/blogs/${id}/like`, { method: 'POST' }, true),
+  unlike: (id) => apiCall(`/blogs/${id}/unlike`, { method: 'DELETE' }, true),
 };
 
 // ===== GALLERY =====
@@ -113,96 +71,50 @@ export const galleryAPI = {
     const query = new URLSearchParams(params).toString();
     return apiCall(`/gallery${query ? `?${query}` : ''}`);
   },
-
   getOne: (id) => apiCall(`/gallery/${id}`),
 };
 
 // ===== FEEDBACK =====
 export const feedbackAPI = {
-  submit: (feedbackData) => apiCall('/feedback', {
-    method: 'POST',
-    body: JSON.stringify(feedbackData),
-  }),
-
-  getMy: () => apiCall('/feedback/my'),
+  submit: (data) => apiCall('/feedback', { method: 'POST', body: JSON.stringify(data) }),
+  getMy: () => apiCall('/feedback/my', {}, true),
 };
 
 // ===== ADMIN =====
 export const adminAPI = {
-  // Dashboard
-  getDashboardStats: () => apiCall('/admin/dashboard/stats'),
+  getDashboardStats: () => apiCall('/admin/dashboard/stats', {}, true),
 
   // Events
-  createEvent: (eventData) => apiCall('/admin/events', {
-    method: 'POST',
-    body: JSON.stringify(eventData),
-  }),
-
-  updateEvent: (id, eventData) => apiCall(`/admin/events/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(eventData),
-  }),
-
-  deleteEvent: (id) => apiCall(`/admin/events/${id}`, {
-    method: 'DELETE',
-  }),
-
-  getEventRegistrations: (id) => apiCall(`/admin/events/${id}/registrations`),
+  createEvent: (data) => apiCall('/admin/events', { method: 'POST', body: JSON.stringify(data) }, true),
+  updateEvent: (id, data) => apiCall(`/admin/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
+  deleteEvent: (id) => apiCall(`/admin/events/${id}`, { method: 'DELETE' }, true),
+  getEventRegistrations: (id) => apiCall(`/admin/events/${id}/registrations`, {}, true),
 
   // Blogs
-  createBlog: (blogData) => apiCall('/admin/blogs', {
-    method: 'POST',
-    body: JSON.stringify(blogData),
-  }),
-
-  updateBlog: (id, blogData) => apiCall(`/admin/blogs/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(blogData),
-  }),
-
-  deleteBlog: (id) => apiCall(`/admin/blogs/${id}`, {
-    method: 'DELETE',
-  }),
+  createBlog: (data) => apiCall('/admin/blogs', { method: 'POST', body: JSON.stringify(data) }, true),
+  updateBlog: (id, data) => apiCall(`/admin/blogs/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
+  deleteBlog: (id) => apiCall(`/admin/blogs/${id}`, { method: 'DELETE' }, true),
 
   // Gallery
   uploadToGallery: async (formData) => {
     const token = getAuthToken();
     const response = await fetch(`${API_URL}/admin/gallery`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData, // FormData with file
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
     return response.json();
   },
-
-  deleteFromGallery: (id) => apiCall(`/admin/gallery/${id}`, {
-    method: 'DELETE',
-  }),
+  deleteFromGallery: (id) => apiCall(`/admin/gallery/${id}`, { method: 'DELETE' }, true),
 
   // Feedback
-  getAllFeedback: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiCall(`/admin/feedback${query ? `?${query}` : ''}`);
-  },
-
-  updateFeedbackStatus: (id, statusData) => apiCall(`/admin/feedback/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(statusData),
-  }),
-
-  deleteFeedback: (id) => apiCall(`/admin/feedback/${id}`, {
-    method: 'DELETE',
-  }),
+  getAllFeedback: () => apiCall('/feedback/admin/all', {}, true),
+  updateFeedbackStatus: (id, data) => apiCall(`/feedback/${id}/status`, { method: 'PUT', body: JSON.stringify(data) }, true),
+  deleteFeedback: (id) => apiCall(`/feedback/${id}`, { method: 'DELETE' }, true),
 
   // Users
-  getAllUsers: () => apiCall('/admin/users'),
-
-  updateUserRole: (id, roleData) => apiCall(`/admin/users/${id}/role`, {
-    method: 'PUT',
-    body: JSON.stringify(roleData),
-  }),
+  getAllUsers: () => apiCall('/admin/users', {}, true),
+  updateUserRole: (id, data) => apiCall(`/admin/users/${id}/role`, { method: 'PUT', body: JSON.stringify(data) }, true),
 };
 
 export default {
