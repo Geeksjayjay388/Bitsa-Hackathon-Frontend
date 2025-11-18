@@ -43,7 +43,9 @@ export const authAPI = {
 };
 
 // ===== EVENTS =====
+// ===== EVENTS =====
 export const eventsAPI = {
+  // params: { status: 'upcoming', upcoming: 'true', page: 1, limit: 10 } etc.
   getAll: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return apiCall(`/events${query ? `?${query}` : ''}`);
@@ -51,8 +53,11 @@ export const eventsAPI = {
   getOne: (id) => apiCall(`/events/${id}`),
   register: (id) => apiCall(`/events/${id}/register`, { method: 'POST' }, true),
   unregister: (id) => apiCall(`/events/${id}/unregister`, { method: 'DELETE' }, true),
+
+  // Matches route: GET /api/events/my/events
   getMyEvents: () => apiCall('/events/my/events', {}, true),
 };
+
 
 // ===== BLOGS =====
 export const blogsAPI = {

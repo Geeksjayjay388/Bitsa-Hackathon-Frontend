@@ -342,7 +342,7 @@ function AdminDashboard() {
                   {event.registeredUsers?.length || 0}/{event.capacity}
                 </span>
               </div>
-              
+
               {/* Registered Users Dropdown */}
               {event.registeredUsers && event.registeredUsers.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-white/20">
@@ -354,56 +354,38 @@ function AdminDashboard() {
                     View Registered Users ({event.registeredUsers.length})
                     {expandedEvent === event._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
-                  
+
                   {expandedEvent === event._id && (
-  <div className="mt-4 space-y-2 pl-4">
-    {event.registeredUsers.map((user, idx) => (
-      <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center gap-3 border border-white/10">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
-          <span className="text-cyan-300 font-bold text-sm">
-            {(user?.fullName || user?.email)?.charAt(0).toUpperCase() || 'U'}
-          </span>
-        </div>
-        <div className="flex-1">
-          <p className="text-white font-bold text-sm">
-            {user?.fullName || user?.email?.split('@')[0] || 'Unknown User'}
-          </p>
-          <p className="text-slate-300 text-xs font-bold">{user?.email || 'No email'}</p>
-        </div>
-      </div>
-    ))}
-  </div>
-)}
+                    <div className="mt-4 space-y-2 pl-4">
+                      {event.registeredUsers.map((user, idx) => (
+                        <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center gap-3 border border-white/10">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
+                            <span className="text-cyan-300 font-bold text-sm">
+                              {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-white font-bold text-sm">
+                              {user?.fullName || user?.email?.split('@')[0] || 'Unknown User'}
+                            </p>
+                            <p className="text-slate-300 text-xs font-bold">
+                              {user?.email || 'No email'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-            <div className="flex gap-2 ml-4">
-              <button 
-                onClick={() => openModal('editEvent', event)}
-                className="px-4 py-2 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-lg hover:bg-blue-500/40 transition-all text-sm font-bold flex items-center gap-1"
-              >
-                <Edit size={16} />
-                Edit
-              </button>
-              <button 
-                onClick={() => handleDelete('event', event._id)}
-                className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
-              >
-                <Trash2 size={16} />
-                Delete
-              </button>
             </div>
           </div>
         </div>
       ))}
-      {events.length === 0 && (
-        <div className="text-center py-12 text-slate-300 font-bold">
-          No events yet. Create your first event!
-        </div>
-      )}
     </div>
   </div>
 )}
+
           {/* Blogs Tab - FIXED COLORS */}
           {activeTab === 'blogs' && (
             <div className="space-y-6">
