@@ -309,16 +309,33 @@ function AdminDashboard() {
         <div key={event._id} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:border-cyan-400/50 transition-all">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-xl font-black text-white">{event.title}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  event.status === 'upcoming' ? 'bg-green-500/30 text-green-300 border border-green-400/50' :
-                  event.status === 'ongoing' ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50' :
-                  'bg-gray-500/30 text-gray-300 border border-gray-400/50'
-                }`}>
-                  {event.status}
-                </span>
-              </div>
+             <div className="flex items-center gap-3 mb-2">
+  <h3 className="text-xl font-black text-white">{event.title}</h3>
+  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+    event.status === 'upcoming' ? 'bg-green-500/30 text-green-300 border border-green-400/50' :
+    event.status === 'ongoing' ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50' :
+    'bg-gray-500/30 text-gray-300 border border-gray-400/50'
+  }`}>
+    {event.status}
+  </span>
+</div>
+<p className="text-slate-300 text-sm font-bold mb-3">{event.description}</p>
+<div className="flex gap-2 mb-4">
+  <button
+    onClick={() => openModal('editEvent', event)}
+    className="px-4 py-2 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-lg hover:bg-blue-500/40 transition-all text-sm font-bold flex items-center gap-1"
+  >
+    <Edit size={16} />
+    Edit
+  </button>
+  <button
+    onClick={() => handleDelete('event', event._id)}
+    className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
+  >
+    <Trash2 size={16} />
+    Delete
+  </button>
+</div>
               <p className="text-slate-300 text-sm font-bold mb-3">{event.description}</p>
               <div className="flex flex-wrap gap-4 text-sm font-bold mb-4">
                 <span className="text-cyan-300 flex items-center gap-1">
