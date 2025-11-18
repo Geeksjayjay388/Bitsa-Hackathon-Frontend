@@ -356,24 +356,24 @@ function AdminDashboard() {
                   </button>
                   
                   {expandedEvent === event._id && (
-                    <div className="mt-4 space-y-2 pl-4">
-                      {event.registeredUsers.map((user, idx) => (
-                        <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center gap-3 border border-white/10">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
-                            <span className="text-cyan-300 font-bold text-sm">
-                              {(user?.name || user?.email)?.charAt(0).toUpperCase() || 'U'}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-white font-bold text-sm">
-                              {user?.name || user?.email?.split('@')[0] || 'Unknown User'}
-                            </p>
-                            <p className="text-slate-300 text-xs font-bold">{user?.email || 'No email'}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+  <div className="mt-4 space-y-2 pl-4">
+    {event.registeredUsers.map((user, idx) => (
+      <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center gap-3 border border-white/10">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
+          <span className="text-cyan-300 font-bold text-sm">
+            {(user?.fullName || user?.email)?.charAt(0).toUpperCase() || 'U'}
+          </span>
+        </div>
+        <div className="flex-1">
+          <p className="text-white font-bold text-sm">
+            {user?.fullName || user?.email?.split('@')[0] || 'Unknown User'}
+          </p>
+          <p className="text-slate-300 text-xs font-bold">{user?.email || 'No email'}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
                 </div>
               )}
             </div>
