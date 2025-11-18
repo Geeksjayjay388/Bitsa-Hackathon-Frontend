@@ -43,6 +43,7 @@ function AdminDashboard() {
     } finally {
       setLoading(false);
     }
+    
   };
 
   // FIXED: Move these functions OUTSIDE of fetchDashboardData

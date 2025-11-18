@@ -61,7 +61,7 @@ export const blogsAPI = {
     return apiCall(`/blogs${query ? `?${query}` : ''}`);
   },
   getOne: (id) => apiCall(`/blogs/${id}`),
-  getById: (id) => apiCall(`/blogs/${id}`), // Added this method for BlogDetail component
+  getById: (id) => apiCall(`/blogs/${id}`),
   like: (id) => apiCall(`/blogs/${id}/like`, { method: 'POST' }, true),
   unlike: (id) => apiCall(`/blogs/${id}/unlike`, { method: 'DELETE' }, true),
 };
@@ -96,17 +96,32 @@ export const adminAPI = {
   updateBlog: (id, data) => apiCall(`/admin/blogs/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
   deleteBlog: (id) => apiCall(`/admin/blogs/${id}`, { method: 'DELETE' }, true),
 
-  // Gallery
+  // Gallery - FIXED: Changed from /admin/gallery to /gallery
   uploadToGallery: async (formData) => {
     const token = getAuthToken();
-    const response = await fetch(`${API_URL}/admin/gallery`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
-    return response.json();
+    try {
+      const response = await fetch(`${API_URL}/gallery`, {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}` 
+          // Don't set Content-Type for FormData - browser will set it automatically with boundary
+        },
+        body: formData,
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
+    }
   },
-  deleteFromGallery: (id) => apiCall(`/admin/gallery/${id}`, { method: 'DELETE' }, true),
+  deleteFromGallery: (id) => apiCall(`/gallery/${id}`, { method: 'DELETE' }, true),
 
   // Feedback
   getAllFeedback: () => apiCall('/feedback/admin/all', {}, true),
