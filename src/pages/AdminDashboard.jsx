@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, eventsAPI, blogsAPI, galleryAPI } from '../services/api';
-
+import { BarChart3, Calendar, FileText, Image, MessageSquare, Users, Plus, Edit, Trash2, X, Save, Upload, Eye, Heart, Star, Check, Clock, MapPin, Trophy, UserCheck, ChevronDown, ChevronUp } from 'lucide-react';
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ function AdminDashboard() {
   const [feedback, setFeedback] = useState([]);
   const [formData, setFormData] = useState({});
   const [galleryFile, setGalleryFile] = useState(null);
+  const [expandedEvent, setExpandedEvent] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -173,13 +174,13 @@ function AdminDashboard() {
   };
 
   const tabs = [
-    { id: 'overview', name: 'Overview', icon: '📊' },
-    { id: 'events', name: 'Events', icon: '📅' },
-    { id: 'blogs', name: 'Blogs', icon: '📝' },
-    { id: 'gallery', name: 'Gallery', icon: '🖼️' },
-    { id: 'feedback', name: 'Feedback', icon: '💬' },
-    { id: 'users', name: 'Users', icon: '👥' },
-  ];
+  { id: 'overview', name: 'Overview', icon: BarChart3 },
+  { id: 'events', name: 'Events', icon: Calendar },
+  { id: 'blogs', name: 'Blogs', icon: FileText },
+  { id: 'gallery', name: 'Gallery', icon: Image },
+  { id: 'feedback', name: 'Feedback', icon: MessageSquare },
+  { id: 'users', name: 'Users', icon: Users },
+];
 
   if (loading) {
     return (
@@ -235,24 +236,27 @@ function AdminDashboard() {
           {/* Tab Navigation - FIXED BUTTONS */}
           <div className="mb-8">
             <div className="flex flex-wrap gap-3">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
+              {tabs.map((tab) => {
+              const IconComponent = tab.icon;
+              return (
+              <button
+               key={tab.id}
+               onClick={() => {
                     setActiveTab(tab.id);
                     if (tab.id === 'users') fetchUsers();
                     if (tab.id === 'feedback') fetchFeedback();
-                  }}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 ${
+                      }}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-400/50'
-                      : 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10'
+                      : 'bg-white/10 text-slate-200 border border-white/20 hover:bg-white/15'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
+                  <IconComponent size={20} />
                   {tab.name}
                 </button>
-              ))}
+              );
+            })}
             </div>
           </div>
 
@@ -261,101 +265,156 @@ function AdminDashboard() {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: 'from-cyan-500 to-blue-500' },
-                  { label: 'Total Events', value: stats?.totalEvents || 0, icon: '📅', color: 'from-blue-500 to-indigo-500' },
-                  { label: 'Total Blogs', value: stats?.totalBlogs || 0, icon: '📝', color: 'from-indigo-500 to-blue-500' },
-                  { label: 'Pending Feedback', value: stats?.pendingFeedback || 0, icon: '💬', color: 'from-blue-500 to-cyan-500' },
-                ].map((stat, index) => (
-                  <div
-                    key={stat.label}
-                    className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all duration-300"
-                    style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both` }}
+                        { label: 'Total Users', value: stats?.totalUsers || 0, icon: Users, color: 'from-cyan-500 to-blue-500' },
+                        { label: 'Total Events', value: stats?.totalEvents || 0, icon: Calendar, color: 'from-blue-500 to-indigo-500' },
+                        { label: 'Total Blogs', value: stats?.totalBlogs || 0, icon: FileText, color: 'from-indigo-500 to-blue-500' },
+                        { label: 'Pending Feedback', value: stats?.pendingFeedback || 0, icon: MessageSquare, color: 'from-blue-500 to-cyan-500' },
+                      ].map((stat, index) => {
+                        const IconComponent = stat.icon;
+                        return (
+                          <div
+                            key={stat.label}
+                            className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:border-cyan-400/50 transition-all duration-300"
+                            style={{ animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both` }}
+                          >
+                            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-30 flex items-center justify-center mb-4`}>
+                              <IconComponent size={24} className="text-white" />
+                            </div>
+                            <p className="text-slate-300 text-sm font-bold mb-1">{stat.label}</p>
+                            <p className="text-3xl font-black text-white">{stat.value}</p>
+                          </div>
+                        );
+                      })}
+              </div>
+            </div>
+          )}
+
+        {/* Events Tab */}
+{activeTab === 'events' && (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-3xl font-black text-white">Manage Events</h2>
+      <button 
+        onClick={() => openModal('createEvent')}
+        className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center gap-2"
+      >
+        <Plus size={20} />
+        Create Event
+      </button>
+    </div>
+
+    <div className="grid grid-cols-1 gap-4">
+      {events.map((event) => (
+        <div key={event._id} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:border-cyan-400/50 transition-all">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="text-xl font-black text-white">{event.title}</h3>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  event.status === 'upcoming' ? 'bg-green-500/30 text-green-300 border border-green-400/50' :
+                  event.status === 'ongoing' ? 'bg-blue-500/30 text-blue-300 border border-blue-400/50' :
+                  'bg-gray-500/30 text-gray-300 border border-gray-400/50'
+                }`}>
+                  {event.status}
+                </span>
+              </div>
+              <p className="text-slate-300 text-sm font-bold mb-3">{event.description}</p>
+              <div className="flex flex-wrap gap-4 text-sm font-bold mb-4">
+                <span className="text-cyan-300 flex items-center gap-1">
+                  <Calendar size={16} />
+                  {new Date(event.date).toLocaleDateString()}
+                </span>
+                <span className="text-blue-300 flex items-center gap-1">
+                  <Clock size={16} />
+                  {event.time}
+                </span>
+                <span className="text-indigo-300 flex items-center gap-1">
+                  <MapPin size={16} />
+                  {event.venue}
+                </span>
+                <span className="text-cyan-300 flex items-center gap-1">
+                  <Trophy size={16} />
+                  {event.category}
+                </span>
+                <span className="text-blue-300 flex items-center gap-1">
+                  <Users size={16} />
+                  {event.registeredUsers?.length || 0}/{event.capacity}
+                </span>
+              </div>
+              
+              {/* Registered Users Dropdown */}
+              {event.registeredUsers && event.registeredUsers.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <button
+                    onClick={() => setExpandedEvent(expandedEvent === event._id ? null : event._id)}
+                    className="flex items-center gap-2 text-cyan-400 font-bold hover:text-cyan-300 transition-colors"
                   >
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20 flex items-center justify-center mb-4 text-2xl`}>
-                      {stat.icon}
-                    </div>
-                    <p className="text-slate-400 text-sm font-semibold mb-1">{stat.label}</p>
-                    <p className="text-3xl font-black text-white">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Events Tab */}
-          {activeTab === 'events' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-black text-white">Manage Events</h2>
-                <button 
-                  onClick={() => openModal('createEvent')}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all"
-                >
-                  + Create Event
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {events.map((event) => (
-                  <div key={event._id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-black text-white">{event.title}</h3>
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            event.status === 'upcoming' ? 'bg-green-500/20 text-green-400' :
-                            event.status === 'ongoing' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-gray-500/20 text-gray-400'
-                          }`}>
-                            {event.status}
-                          </span>
+                    <UserCheck size={18} />
+                    View Registered Users ({event.registeredUsers.length})
+                    {expandedEvent === event._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+                  
+                  {expandedEvent === event._id && (
+                    <div className="mt-4 space-y-2 pl-4">
+                      {event.registeredUsers.map((user, idx) => (
+                        <div key={idx} className="bg-white/5 rounded-lg p-3 flex items-center gap-3 border border-white/10">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
+                            <span className="text-cyan-300 font-bold text-sm">
+                              {(user?.name || user?.email)?.charAt(0).toUpperCase() || 'U'}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-white font-bold text-sm">
+                              {user?.name || user?.email?.split('@')[0] || 'Unknown User'}
+                            </p>
+                            <p className="text-slate-300 text-xs font-bold">{user?.email || 'No email'}</p>
+                          </div>
                         </div>
-                        <p className="text-slate-400 text-sm mb-3">{event.description}</p>
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          <span className="text-cyan-400">📅 {new Date(event.date).toLocaleDateString()}</span>
-                          <span className="text-blue-400">⏰ {event.time}</span>
-                          <span className="text-indigo-400">📍 {event.venue}</span>
-                          <span className="text-cyan-400">🏆 {event.category}</span>
-                          <span className="text-blue-400">👥 {event.registeredUsers?.length || 0}/{event.capacity}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => openModal('editEvent', event)}
-                          className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold"
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDelete('event', event._id)}
-                          className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm font-semibold"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
-                {events.length === 0 && (
-                  <div className="text-center py-12 text-slate-400">
-                    No events yet. Create your first event!
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-
+            <div className="flex gap-2 ml-4">
+              <button 
+                onClick={() => openModal('editEvent', event)}
+                className="px-4 py-2 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-lg hover:bg-blue-500/40 transition-all text-sm font-bold flex items-center gap-1"
+              >
+                <Edit size={16} />
+                Edit
+              </button>
+              <button 
+                onClick={() => handleDelete('event', event._id)}
+                className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
+              >
+                <Trash2 size={16} />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {events.length === 0 && (
+        <div className="text-center py-12 text-slate-300 font-bold">
+          No events yet. Create your first event!
+        </div>
+      )}
+    </div>
+  </div>
+)}
           {/* Blogs Tab - FIXED COLORS */}
           {activeTab === 'blogs' && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-3xl font-black text-white">Manage Blogs</h2>
                 <button 
-                  onClick={() => openModal('createBlog')}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all"
-                >
-                  + Create Blog
-                </button>
+                onClick={() => openModal('createBlog')}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center gap-2"
+              >
+                <Plus size={20} />
+                Create Blog
+              </button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -368,37 +427,47 @@ function AdminDashboard() {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="text-xl font-black text-white flex-1">{blog.title}</h3>
                         {blog.featured && (
-                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded">
-                            ⭐ Featured
-                          </span>
-                        )}
+                        <span className="px-2 py-1 bg-yellow-500/30 text-yellow-300 text-xs font-bold rounded border border-yellow-400/50 flex items-center gap-1">
+                          <Star size={14} />
+                          Featured
+                        </span>
+                      )}
+                        
                       </div>
                       <p className="text-slate-400 text-sm mb-4 line-clamp-2">{blog.excerpt || blog.content?.substring(0, 100) + '...'}</p>
                       <div className="flex justify-between items-center mb-4">
-                        <div className="flex gap-4 text-sm">
-                          <span className="text-cyan-400">👁️ {blog.views || 0}</span>
-                          <span className="text-blue-400">❤️ {blog.likes?.length || 0}</span>
-                          <span className="text-indigo-400 capitalize">{blog.category}</span>
-                        </div>
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          blog.published ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {blog.published ? 'Published' : 'Draft'}
-                        </span>
+                      <div className="flex gap-4 text-sm font-bold">
+                      <span className="text-cyan-300 flex items-center gap-1">
+                        <Eye size={16} />
+                        {blog.views || 0}
+                      </span>
+                      <span className="text-blue-300 flex items-center gap-1">
+                        <Heart size={16} />
+                        {blog.likes?.length || 0}
+                      </span>
+                      <span className="text-indigo-300 capitalize">{blog.category}</span>
+                    </div>
+                        <span className={`px-2 py-1 rounded text-xs font-bold flex items-center gap-1 ${
+                            blog.published ? 'bg-green-500/30 text-green-300 border border-green-400/50' : 'bg-gray-500/30 text-gray-300 border border-gray-400/50'
+                          }`}>
+                            {blog.published ? <><Check size={14} /> Published</> : 'Draft'}
+                          </span>
                       </div>
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => openModal('editBlog', blog)}
-                          className="flex-1 px-3 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all text-sm font-semibold"
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDelete('blog', blog._id)}
-                          className="flex-1 px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm font-semibold"
-                        >
-                          Delete
-                        </button>
+                      onClick={() => openModal('editBlog', blog)}
+                      className="flex-1 px-3 py-2 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-lg hover:bg-blue-500/40 transition-all text-sm font-bold flex items-center justify-center gap-1"
+                    >
+                      <Edit size={16} />
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete('blog', blog._id)}
+                      className="flex-1 px-3 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center justify-center gap-1"
+                    >
+                      <Trash2 size={16} />
+                      Delete
+                    </button>
                       </div>
                     </div>
                   </div>
@@ -419,10 +488,12 @@ function AdminDashboard() {
                 <h2 className="text-3xl font-black text-white">Gallery Management</h2>
                 <button 
                   onClick={() => openModal('uploadGallery')}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all"
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:from-cyan-400 hover:to-blue-500 transition-all flex items-center gap-2"
                 >
-                  + Upload Image
+                  <Upload size={20} />
+                  Upload Image
                 </button>
+
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {gallery.map((item) => (
@@ -440,11 +511,12 @@ function AdminDashboard() {
                           {item.category}
                         </span>
                         <button 
-                          onClick={() => handleDelete('gallery', item._id)}
-                          className="text-red-400 text-sm hover:text-red-300 font-semibold"
-                        >
-                          Delete
-                        </button>
+                        onClick={() => handleDelete('gallery', item._id)}
+                        className="text-red-300 text-sm hover:text-red-200 font-bold flex items-center gap-1"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
                       </div>
                     </div>
                   </div>
@@ -458,61 +530,65 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* Users Tab */}
-          {activeTab === 'users' && (
-            <div className="space-y-6">
-              <h2 className="text-3xl font-black text-white">User Management</h2>
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-white/5 border-b border-white/10">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider">Name</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider">Role</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider">Joined</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider">Events</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/10">
-                      {users.map((u) => (
-                        <tr key={u._id} className="hover:bg-white/5 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                                <span className="text-cyan-400 font-bold">{u.name?.charAt(0).toUpperCase()}</span>
-                              </div>
-                              <span className="text-white font-semibold">{u.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-slate-400">{u.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              u.role === 'admin' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-slate-400">
-                            {new Date(u.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-cyan-400 font-semibold">
-                            {u.registeredEvents?.length || 0}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {users.length === 0 && (
-                    <div className="text-center py-12 text-slate-400">
-                      <p>No users found</p>
-                    </div>
-                  )}
+          {/* Users Tab - FIXED VERSION */}
+{activeTab === 'users' && (
+  <div className="space-y-6">
+    <h2 className="text-3xl font-black text-white">User Management</h2>
+    <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-white/10 border-b border-white/20">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-black text-cyan-300 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-4 text-left text-xs font-black text-cyan-300 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-4 text-left text-xs font-black text-cyan-300 uppercase tracking-wider">Role</th>
+              <th className="px-6 py-4 text-left text-xs font-black text-cyan-300 uppercase tracking-wider">Joined</th>
+              <th className="px-6 py-4 text-left text-xs font-black text-cyan-300 uppercase tracking-wider">Events Registered</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/20">
+            {users.map((u) => (
+              <tr key={u._id} className="hover:bg-white/5 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-400/50 flex items-center justify-center">
+                    <span className="text-cyan-300 font-black">{(u.name || u.email)?.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <span className="text-white font-bold">{u.name || u.email.split('@')[0]}</span>
                 </div>
-              </div>
-            </div>
-          )}
-
+              </td>
+                <td className="px-6 py-4 whitespace-nowrap text-slate-300 font-bold">{u.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    u.role === 'admin' 
+                      ? 'bg-blue-500/30 text-blue-300 border-blue-400/50' 
+                      : 'bg-gray-500/30 text-gray-300 border-gray-400/50'
+                  }`}>
+                    {u.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-slate-300 font-bold">
+                  {new Date(u.createdAt).toLocaleDateString()}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/30 text-cyan-300 rounded-lg border border-cyan-400/50 font-black">
+                    <Calendar size={16} />
+                    {Array.isArray(u.registeredEvents) ? u.registeredEvents.length : 0}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {users.length === 0 && (
+          <div className="text-center py-12 text-slate-300 font-bold">
+            <p>No users found</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
           {/* Feedback Tab */}
           {activeTab === 'feedback' && (
             <div className="space-y-6">
@@ -546,8 +622,9 @@ function AdminDashboard() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleDelete('feedback', item._id)}
-                        className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all text-sm font-semibold"
+                        className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
                       >
+                        <Trash2 size={16} />
                         Delete
                       </button>
                     </div>
@@ -577,7 +654,9 @@ function AdminDashboard() {
                  modalType === 'editBlog' ? 'Edit Blog' :
                  'Upload Image'}
               </h3>
-              <button onClick={closeModal} className="text-slate-400 hover:text-white text-2xl">✕</button>
+              <button onClick={closeModal} className="text-slate-300 hover:text-white text-2xl font-bold">
+              <X size={28} />
+            </button>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               {/* EVENT FORM */}
@@ -788,8 +867,11 @@ function AdminDashboard() {
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-500/20 file:text-cyan-400 file:font-semibold hover:file:bg-cyan-500/30 focus:border-cyan-400/50 focus:outline-none"
                     />
                     {galleryFile && (
-                      <p className="text-green-400 text-sm mt-2">✓ {galleryFile.name}</p>
-                    )}
+                    <p className="text-green-300 text-sm font-bold mt-2 flex items-center gap-1">
+                      <Check size={16} />
+                      {galleryFile.name}
+                    </p>
+                  )}
                   </div>
                   <input
                     type="text"
@@ -837,7 +919,10 @@ function AdminDashboard() {
                     {modalType === 'uploadGallery' ? 'Uploading...' : 'Saving...'}
                   </>
                 ) : (
-                  editingItem ? 'Update' : modalType === 'uploadGallery' ? 'Upload' : 'Create'
+                  <>
+                    <Save size={20} />
+                    {editingItem ? 'Update' : modalType === 'uploadGallery' ? 'Upload' : 'Create'}
+                  </>
                 )}
               </button>
             </form>
@@ -866,5 +951,4 @@ function AdminDashboard() {
     </div>
   );
 }
-
 export default AdminDashboard;
