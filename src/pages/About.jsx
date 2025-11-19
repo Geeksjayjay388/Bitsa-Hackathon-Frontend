@@ -9,7 +9,7 @@ function About() {
       id: 1,
       name: "Sarah Kamau",
       role: "President",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
+      image: "https://imgs.search.brave.com/Iz4k-uXpOMyhMzk_5m_JQ0HO_AfpVvJ7WMCHcNeqFg0/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zdGF0/aWMudmVjdGVlenku/Y29tL3N5c3RlbS9y/ZXNvdXJjZXMvdGh1/bWJuYWlscy8wNTMv/MTg2LzMzOC9zbWFs/bC9jb25maWRlbnQt/YnVzaW5lc3N3b21h/bi1pbi1vZmZpY2Ut/c2V0dGluZy1waG90/by5qcGc",
       bio: "Leading BITSA with vision and passion for technology innovation.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     },
@@ -17,7 +17,7 @@ function About() {
       id: 2,
       name: "David Ochieng",
       role: "Vice President",
-      image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&q=80",
+      image: "https://imgs.search.brave.com/bmWZ8skpwSmOWDlSxzjNPIOtOz3tPXKGMR_nHMCSurI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5pc3RvY2twaG90/by5jb20vaWQvMTQ0/Nzk3OTMxNS9waG90/by95b3VuZy1tYW4t/dXNpbmctY29tcHV0/ZXItaW4tb2ZmaWNl/LmpwZz9zPTYxMng2/MTImdz0wJms9MjAm/Yz1uM3EwV2ZiczBX/d0RPa2Y4WmNMQ28w/bmkxczlyTVZSaktD/ZVR5SjhYUTc0PQ",
       bio: "Driving community engagement and technical excellence.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     },
@@ -25,7 +25,7 @@ function About() {
       id: 3,
       name: "Grace Mwangi",
       role: "Technical Lead",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",
+      image: "https://imgs.search.brave.com/KKDkudcuQwDarnQYg0k5qqWWgY2a9UxY5dtx5e4JJoI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9wbHVz/LnVuc3BsYXNoLmNv/bS9wcmVtaXVtX3Bo/b3RvLTE2NjE1ODk4/MzY5MTAtYjNiMGJm/NjQ0YmQ1P2ZtPWpw/ZyZxPTYwJnc9MzAw/MCZpeGxpYj1yYi00/LjEuMCZpeGlkPU0z/d3hNakEzZkRCOE1I/eHpaV0Z5WTJoOE1Y/eDhjSEp2Wm1WemMy/bHZibUZzSlRJd1lt/eGhZMnNsTWpCM2Iy/MWhibnhsYm53d2ZI/d3dmSHg4TUE9PQ",
       bio: "Mentoring members and coordinating technical workshops.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     },
@@ -33,7 +33,7 @@ function About() {
       id: 4,
       name: "James Kiprono",
       role: "Events Coordinator",
-      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&q=80",
+      image: "https://imgs.search.brave.com/UMAf5zF0FJa7i3W1d28F-LIT1zfKq854ibJsy-awnZQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS1waG90/by9ibGFjay1tYW4t/cG9ydHJhaXQtY29u/ZmlkZW50LW9mZmlj/ZS1wcm9mZXNzaW9u/YWwtcHJvdWQtY2Fy/ZWVyLW9wcG9ydHVu/aXR5LWxhdy1maXJt/LW1hbGUtcGVyc29u/LWVtcGxveWVlLWxh/d3llci1hZ2VuY3kt/b2NjdXBhdGlvbi1h/dHRvcm5leS1mdXR1/cmUtZ3Jvd3RoLXdp/dGgtc21pbGVfNTkw/NDY0LTM2MjQ1OS5q/cGc_c2VtdD1haXNf/aW5jb21pbmcmdz03/NDAmcT04MA",
       bio: "Organizing hackathons and networking events.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     },
@@ -41,7 +41,7 @@ function About() {
       id: 5,
       name: "Lucy Akinyi",
       role: "Communications",
-      image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80",
+      image: "https://imgs.search.brave.com/WAfz0-HICLLKn331PrYi-bghN-L6CM07JAwZUYK6yJ8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWcu/ZnJlZXBpay5jb20v/cHJlbWl1bS1waG90/by9lbGVnYW50LWJ1/c2luZXNzLXdvbWFu/LXBvcnRyYWl0LXdp/dGgtc29waGlzdGlj/YXRlZC1ncmF5LXN1/aXQtYnktcG5nLWlt/YWdlXzEyMDY4NDEt/MTEyMy5qcGc_c2Vt/dD1haXNfaHlicmlk/Jnc9NzQwJnE9ODA",
       bio: "Managing community outreach and social media presence.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     },
@@ -49,7 +49,7 @@ function About() {
       id: 6,
       name: "Michael Otieno",
       role: "Treasurer",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80",
+      image: "https://imgs.search.brave.com/yxsr4GsteKk_vuFD4E4uqvKhlR6WyoNFKryqSHKyroI/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMucGV4ZWxzLmNv/bS9waG90b3MvMTQw/NTk2My9wZXhlbHMt/cGhvdG8tMTQwNTk2/My5qcGVnP2F1dG89/Y29tcHJlc3MmY3M9/dGlueXNyZ2ImZHBy/PTEmdz01MDA",
       bio: "Handling finances and partnership agreements.",
       social: { linkedin: "#", twitter: "#", github: "#" }
     }
