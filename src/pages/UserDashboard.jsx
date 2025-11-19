@@ -1,73 +1,69 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { eventsAPI, authAPI } from "../services/api";
 import { 
-  BarChart3, 
-  Rocket, 
-  CheckCircle, 
-  User, 
-  Zap, 
-  Ticket, 
-  Plus, 
-  Target, 
   Calendar, 
   Clock, 
   MapPin, 
   Eye, 
-  X 
+  X,
+  Camera,
+  Edit2,
+  CheckCircle,
+  Ticket,
+  Mail,
+  TrendingUp,
+  Award,
+  User as UserIcon,
+  ChevronRight,
+  Sparkles,
+  AlertCircle
 } from "lucide-react";
 
-const API_URL = "https://bitsa-website-backend.onrender.com/api";
-
 function UserDashboard() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [registeredEvents, setRegisteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("registered");
   const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    phone: "",
+    bio: ""
+  });
+  const [uploading, setUploading] = useState(false);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilePicture || null);
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name || "",
+        phone: user.phone || "",
+        bio: user.bio || ""
+      });
+      setProfilePictureUrl(user.profilePicture);
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchRegisteredEvents = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        const token = localStorage.getItem('token') || user?.token;
-
-        if (!token) {
-          setError('No authentication token found');
-          setLoading(false);
-          return;
-        }
-
-        if (!user?.id) {
-          setError('User ID not found');
-          setLoading(false);
-          return;
-        }
-
-        console.log('Fetching events for user:', user.id);
         
-        const response = await fetch(`${API_URL}/users/${user.id}/events`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        console.log('Response status:', response.status);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: 'Failed to fetch events' }));
-          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Received data:', data);
+        const data = await eventsAPI.getMyEvents();
         
-        // Process the events to add status based on date
-        const processedEvents = (data.events || data.data || []).map(event => ({
+        let eventsArray = [];
+        if (Array.isArray(data)) {
+          eventsArray = data;
+        } else if (data.events && Array.isArray(data.events)) {
+          eventsArray = data.events;
+        } else if (data.data && Array.isArray(data.data)) {
+          eventsArray = data.data;
+        }
+        
+        const processedEvents = eventsArray.map(event => ({
           ...event,
           status: new Date(event.date) < new Date() ? 'completed' : 'upcoming'
         }));
@@ -75,7 +71,7 @@ function UserDashboard() {
         setRegisteredEvents(processedEvents);
       } catch (error) {
         console.error("Error fetching events:", error);
-        setError(error.message || 'Failed to load dashboard data');
+        setError(error.message || 'Failed to load your events');
       } finally {
         setLoading(false);
       }
@@ -85,7 +81,6 @@ function UserDashboard() {
       fetchRegisteredEvents();
     } else {
       setLoading(false);
-      setError('User not authenticated');
     }
   }, [user]);
 
@@ -93,26 +88,7 @@ function UserDashboard() {
     if (!window.confirm('Are you sure you want to cancel this registration?')) return;
     
     try {
-      const token = localStorage.getItem('token') || user?.token;
-
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_URL}/events/${eventId}/unregister`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to cancel registration');
-      }
-
-      // Remove the event from the list
+      await eventsAPI.unregister(eventId);
       setRegisteredEvents(prev => prev.filter(event => event._id !== eventId));
       alert('Registration cancelled successfully!');
     } catch (error) {
@@ -121,44 +97,176 @@ function UserDashboard() {
     }
   };
 
+  const handleProfilePictureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://bitsa-website-backend.onrender.com/api/auth/updatedetails', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload profile picture');
+      }
+
+      const data = await response.json();
+      
+      if (data.data) {
+        if (updateUser) {
+          updateUser(data.data);
+        }
+        setProfilePictureUrl(data.data.profilePicture);
+      }
+
+      alert('Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      alert(error.message || 'Failed to upload profile picture');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const data = await authAPI.updateDetails(profileData);
+      
+      if (updateUser && data.data) {
+        updateUser(data.data);
+      }
+      
+      setEditMode(false);
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert(error.message || 'Failed to update profile');
+    }
+  };
+
   const displayName = user?.name || user?.email?.split('@')[0] || "User";
   const upcomingEvents = registeredEvents.filter(e => e.status === "upcoming");
   const completedEvents = registeredEvents.filter(e => e.status === "completed");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pt-24 pb-12 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {/* Avatar */}
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full blur-xl opacity-50"></div>
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-4xl shadow-2xl">
-                {displayName.charAt(0).toUpperCase()}
+        {/* Header Card */}
+        <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-800/70 to-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-700/50 overflow-hidden mb-8">
+          {/* Decorative gradient */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-500/10 to-transparent rounded-full blur-3xl"></div>
+          
+          <div className="relative bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 h-40 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/90"></div>
+          </div>
+          
+          <div className="relative px-8 pb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-end gap-6 -mt-20">
+              {/* Profile Picture */}
+              <div className="relative group">
+                <div className="relative w-36 h-36 rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden bg-gradient-to-br from-slate-700 to-slate-800 ring-4 ring-cyan-500/20">
+                  {profilePictureUrl ? (
+                    <img 
+                      src={profilePictureUrl} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover" 
+                      key={profilePictureUrl}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 text-white text-5xl font-bold">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+                      <div className="w-10 h-10 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                <label 
+                  htmlFor="profile-picture-upload" 
+                  className="absolute -bottom-2 -right-2 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 p-3.5 rounded-2xl cursor-pointer transition-all shadow-lg shadow-cyan-500/50 group-hover:scale-110"
+                >
+                  <Camera size={20} className="text-white" />
+                  <input
+                    id="profile-picture-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
               </div>
-            </div>
 
-            {/* User Info */}
-            <div className="flex-1">
-              <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-400 bg-clip-text text-transparent mb-2">
-                Welcome back, {displayName}!
-              </h1>
-              <p className="text-slate-300 text-lg mb-4">{user?.email}</p>
-              
-              {/* Stats */}
-              <div className="flex flex-wrap gap-4">
-                <div className="px-4 py-2 bg-cyan-500/10 border border-cyan-400/30 rounded-xl">
-                  <span className="text-cyan-400 font-bold text-lg">{upcomingEvents.length}</span>
-                  <span className="text-slate-300 ml-2">Upcoming Events</span>
+              {/* User Info */}
+              <div className="flex-1 md:ml-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold text-white">{displayName}</h1>
+                  
                 </div>
-                <div className="px-4 py-2 bg-blue-500/10 border border-blue-400/30 rounded-xl">
-                  <span className="text-blue-400 font-bold text-lg">{completedEvents.length}</span>
-                  <span className="text-slate-300 ml-2">Completed Events</span>
-                </div>
-                <div className="px-4 py-2 bg-purple-500/10 border border-purple-400/30 rounded-xl">
-                  <span className="text-purple-400 font-bold text-lg">{registeredEvents.length}</span>
-                  <span className="text-slate-300 ml-2">Total Registered</span>
+                <p className="text-slate-400 flex items-center gap-2 mb-6 text-lg">
+                  <Mail size={18} className="text-cyan-400" />
+                  {user?.email}
+                </p>
+                
+                {/* Stats Cards */}
+                <div className="flex flex-wrap gap-4">
+                  <div className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/30 px-6 py-3.5 rounded-2xl hover:border-cyan-400/50 transition-all">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative flex items-center gap-3">
+                      <TrendingUp className="text-cyan-400" size={24} />
+                      <div>
+                        <div className="text-3xl font-bold text-cyan-400">{upcomingEvents.length}</div>
+                        <div className="text-slate-400 text-sm font-medium">Upcoming</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="group relative bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-sm border border-green-500/30 px-6 py-3.5 rounded-2xl hover:border-green-400/50 transition-all">
+                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative flex items-center gap-3">
+                      <CheckCircle className="text-green-400" size={24} />
+                      <div>
+                        <div className="text-3xl font-bold text-green-400">{completedEvents.length}</div>
+                        <div className="text-slate-400 text-sm font-medium">Completed</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="group relative bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm border border-purple-500/30 px-6 py-3.5 rounded-2xl hover:border-purple-400/50 transition-all">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div className="relative flex items-center gap-3">
+                      <Award className="text-purple-400" size={24} />
+                      <div>
+                        <div className="text-3xl font-bold text-purple-400">{registeredEvents.length}</div>
+                        <div className="text-slate-400 text-sm font-medium">Total Events</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -166,153 +274,180 @@ function UserDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 overflow-x-auto">
+        <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-2 mb-8 inline-flex flex-wrap gap-2">
           <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
-              activeTab === "overview"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+            onClick={() => setActiveTab("registered")}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              activeTab === "registered"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
             }`}
           >
-            <BarChart3 size={20} />
-            Overview
+            <span className="flex items-center gap-2">
+              <Ticket size={18} />
+              Registered ({registeredEvents.length})
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("upcoming")}
-            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
               activeTab === "upcoming"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
             }`}
           >
-            <Rocket size={20} />
-            Upcoming ({upcomingEvents.length})
+            <span className="flex items-center gap-2">
+              <TrendingUp size={18} />
+              Upcoming ({upcomingEvents.length})
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("completed")}
-            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
               activeTab === "completed"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
             }`}
           >
-            <CheckCircle size={20} />
-            Completed ({completedEvents.length})
+            <span className="flex items-center gap-2">
+              <CheckCircle size={18} />
+              Completed ({completedEvents.length})
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
               activeTab === "profile"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                : "bg-slate-800/50 text-slate-300 hover:bg-slate-700/50"
+                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
             }`}
           >
-            <User size={20} />
-            Profile
+            <span className="flex items-center gap-2">
+              <UserIcon size={18} />
+              Profile
+            </span>
           </button>
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-500/10 border border-red-400/30 rounded-2xl p-6 mb-8">
-            <p className="text-red-400 text-center font-semibold">⚠️ {error}</p>
-            <p className="text-red-300 text-center text-sm mt-2">
-              Please try refreshing the page. If the issue persists, check your connection and authentication.
-            </p>
+          <div className="bg-red-500/10 backdrop-blur-sm border border-red-500/50 rounded-2xl p-5 mb-8 shadow-lg">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-400" size={24} />
+              <p className="text-red-400 font-semibold">{error}</p>
+            </div>
           </div>
         )}
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-slate-300 mt-4">Loading your dashboard...</p>
+          <div className="text-center py-20">
+            <div className="inline-block w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-400 text-lg font-medium">Loading your dashboard...</p>
           </div>
         )}
 
-        {/* Content based on active tab */}
+        {/* Content */}
         {!loading && !error && (
           <>
-            {/* Overview Tab */}
-            {activeTab === "overview" && (
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    <Zap className="text-cyan-400" size={24} />
-                    Quick Actions
-                  </h2>
-                  <div className="space-y-3">
-                    <Link
-                      to="/events"
-                      className="flex items-center gap-3 px-4 py-3 bg-cyan-500/10 border border-cyan-400/30 rounded-xl text-cyan-400 hover:bg-cyan-500/20 transition-all"
-                    >
-                      <Ticket size={20} />
-                      Browse All Events
-                    </Link>
-                    <Link
-                      to="/events"
-                      className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-400/30 rounded-xl text-blue-400 hover:bg-blue-500/20 transition-all"
-                    >
-                      <Plus size={20} />
-                      Register for New Event
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Next Upcoming Event */}
-                {upcomingEvents.length > 0 ? (
-                  <div className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Target className="text-cyan-400" size={24} />
-                      Next Event
-                    </h2>
-                    <div className="bg-slate-900/50 rounded-xl p-4 border border-cyan-400/20">
-                      <h3 className="text-xl font-bold text-cyan-400 mb-2">{upcomingEvents[0].title}</h3>
-                      <div className="space-y-2 text-slate-300">
-                        <p className="flex items-center gap-2">
-                          <Calendar size={18} className="text-cyan-400" />
-                          {new Date(upcomingEvents[0].date).toLocaleDateString()}
-                        </p>
-                        {upcomingEvents[0].time && (
-                          <p className="flex items-center gap-2">
-                            <Clock size={18} className="text-cyan-400" />
-                            {upcomingEvents[0].time}
-                          </p>
-                        )}
-                        {upcomingEvents[0].location && (
-                          <p className="flex items-center gap-2">
-                            <MapPin size={18} className="text-cyan-400" />
-                            {upcomingEvents[0].location}
-                          </p>
-                        )}
-                      </div>
-                      <Link
-                        to={`/events/${upcomingEvents[0]._id}`}
-                        className="mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
-                      >
-                        <Eye size={18} />
-                        View Details
-                      </Link>
+            {/* Registered Events Tab */}
+            {activeTab === "registered" && (
+              <div>
+                {registeredEvents.length === 0 ? (
+                  <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+                    <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                      <Ticket size={40} className="text-slate-500" />
                     </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">No Events Yet</h3>
+                    <p className="text-slate-400 mb-8 text-lg">You haven't registered for any events</p>
+                    <a
+                      href="/events"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-2xl hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
+                    >
+                      <Sparkles size={20} />
+                      Browse Events
+                      <ChevronRight size={20} />
+                    </a>
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Target className="text-cyan-400" size={24} />
-                      Next Event
-                    </h2>
-                    <div className="text-center py-8">
-                      <p className="text-slate-400 mb-4">No upcoming events</p>
-                      <Link
-                        to="/events"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {registeredEvents.map((event) => (
+                      <div
+                        key={event._id}
+                        className={`group relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300 ${
+                          event.status === 'completed' ? 'opacity-70' : ''
+                        }`}
                       >
-                        <Ticket size={18} />
-                        Browse Events
-                      </Link>
-                    </div>
+                        {event.image ? (
+                          <div className="h-52 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${event.image})` }}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                            {event.status === 'completed' && (
+                              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                                <CheckCircle size={56} className="text-green-400" />
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className={`h-52 flex items-center justify-center relative overflow-hidden ${
+                            event.status === 'completed' 
+                              ? 'bg-gradient-to-br from-slate-700 to-slate-800' 
+                              : 'bg-gradient-to-br from-cyan-900/30 via-blue-900/30 to-purple-900/30'
+                          }`}>
+                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50"></div>
+                            {event.status === 'completed' ? (
+                              <CheckCircle size={56} className="text-green-400 relative z-10" />
+                            ) : (
+                              <Ticket size={56} className="text-cyan-400 relative z-10" />
+                            )}
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <div className="flex items-start justify-between mb-3">
+                            <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-2">{event.title}</h3>
+                            {event.status === 'completed' && (
+                              <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full whitespace-nowrap ml-2">
+                                Completed
+                              </span>
+                            )}
+                            {event.status === 'upcoming' && (
+                              <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 text-xs font-bold rounded-full whitespace-nowrap ml-2">
+                                Upcoming
+                              </span>
+                            )}
+                          </div>
+                          {event.description && (
+                            <p className="text-slate-400 text-sm mb-4 line-clamp-2">{event.description}</p>
+                          )}
+                          <div className="space-y-2.5 text-sm text-slate-400 mb-5">
+                            <div className="flex items-center gap-2.5">
+                              <Calendar size={16} className={event.status === 'completed' ? 'text-green-400' : 'text-cyan-400'} />
+                              <span>{new Date(event.date).toLocaleDateString()}</span>
+                            </div>
+                            {event.time && (
+                              <div className="flex items-center gap-2.5">
+                                <Clock size={16} className={event.status === 'completed' ? 'text-green-400' : 'text-cyan-400'} />
+                                <span>{event.time}</span>
+                              </div>
+                            )}
+                            {event.location && (
+                              <div className="flex items-center gap-2.5">
+                                <MapPin size={16} className={event.status === 'completed' ? 'text-green-400' : 'text-cyan-400'} />
+                                <span className="line-clamp-1">{event.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          {event.status === 'upcoming' && (
+                            <button
+                              onClick={() => handleCancelRegistration(event._id)}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-red-500/50 bg-red-500/10 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all"
+                            >
+                              <X size={18} />
+                              Cancel Registration
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -320,181 +455,268 @@ function UserDashboard() {
 
             {/* Upcoming Events Tab */}
             {activeTab === "upcoming" && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
                 {upcomingEvents.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <Rocket size={48} className="mx-auto text-slate-500 mb-4" />
-                    <p className="text-slate-400 text-lg mb-4">You have no upcoming events</p>
-                    <Link
-                      to="/events"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
+                  <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+                    <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                      <TrendingUp size={40} className="text-slate-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">No Upcoming Events</h3>
+                    <p className="text-slate-400 mb-8 text-lg">You don't have any upcoming events</p>
+                    <a
+                      href="/events"
+                      className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-2xl hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
                     >
-                      <Ticket size={18} />
+                      <Sparkles size={20} />
                       Browse Events
-                    </Link>
+                      <ChevronRight size={20} />
+                    </a>
                   </div>
                 ) : (
-                  upcomingEvents.map((event) => (
-                    <div
-                      key={event._id}
-                      className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden hover:border-cyan-400/50 transition-all"
-                    >
-                      {event.image ? (
-                        <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${event.image})` }}>
-                          <div className="h-full bg-gradient-to-t from-slate-900 to-transparent"></div>
-                        </div>
-                      ) : (
-                        <div className="h-48 bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                          <Ticket size={64} className="text-white/50" />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
-                        {event.description && (
-                          <p className="text-slate-400 text-sm mb-3 line-clamp-2">{event.description}</p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {upcomingEvents.map((event) => (
+                      <div
+                        key={event._id}
+                        className="group relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden hover:border-cyan-500/50 transition-all duration-300"
+                      >
+                        {event.image ? (
+                          <div className="h-52 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${event.image})` }}>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                          </div>
+                        ) : (
+                          <div className="h-52 bg-gradient-to-br from-cyan-900/30 via-blue-900/30 to-purple-900/30 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50"></div>
+                            <Ticket size={56} className="text-cyan-400 relative z-10" />
+                          </div>
                         )}
-                        <div className="space-y-2 text-slate-300 mb-4">
-                          <p className="flex items-center gap-2">
-                            <Calendar size={16} className="text-cyan-400" />
-                            {new Date(event.date).toLocaleDateString()}
-                          </p>
-                          {event.time && (
-                            <p className="flex items-center gap-2">
-                              <Clock size={16} className="text-cyan-400" />
-                              {event.time}
-                            </p>
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors line-clamp-2">{event.title}</h3>
+                          {event.description && (
+                            <p className="text-slate-400 text-sm mb-4 line-clamp-2">{event.description}</p>
                           )}
-                          {event.location && (
-                            <p className="flex items-center gap-2">
-                              <MapPin size={16} className="text-cyan-400" />
-                              {event.location}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Link
-                            to={`/events/${event._id}`}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 font-bold rounded-xl hover:bg-cyan-500/20 transition-all"
-                          >
-                            <Eye size={16} />
-                            View
-                          </Link>
-                          <button
-                            onClick={() => handleCancelRegistration(event._id)}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 border border-red-400/30 text-red-400 font-bold rounded-xl hover:bg-red-500/20 transition-all"
-                          >
-                            <X size={16} />
-                            Cancel
-                          </button>
+                          <div className="space-y-2.5 text-sm text-slate-400 mb-5">
+                            <div className="flex items-center gap-2.5">
+                              <Calendar size={16} className="text-cyan-400" />
+                              <span>{new Date(event.date).toLocaleDateString()}</span>
+                            </div>
+                            {event.time && (
+                              <div className="flex items-center gap-2.5">
+                                <Clock size={16} className="text-cyan-400" />
+                                <span>{event.time}</span>
+                              </div>
+                            )}
+                            {event.location && (
+                              <div className="flex items-center gap-2.5">
+                                <MapPin size={16} className="text-cyan-400" />
+                                <span className="line-clamp-1">{event.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-3">
+                            <a
+                              href={`/events/${event._id}`}
+                              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
+                            >
+                              <Eye size={18} />
+                              View
+                            </a>
+                            <button
+                              onClick={() => handleCancelRegistration(event._id)}
+                              className="flex items-center justify-center gap-2 px-4 py-3 border border-red-500/50 bg-red-500/10 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all"
+                            >
+                              <X size={18} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {/* Completed Events Tab */}
             {activeTab === "completed" && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
                 {completedEvents.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <CheckCircle size={48} className="mx-auto text-slate-500 mb-4" />
-                    <p className="text-slate-400 text-lg">No completed events yet</p>
+                  <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+                    <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                      <CheckCircle size={40} className="text-slate-500" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">No Completed Events</h3>
+                    <p className="text-slate-400 text-lg">You haven't attended any events yet</p>
                   </div>
                 ) : (
-                  completedEvents.map((event) => (
-                    <div
-                      key={event._id}
-                      className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden opacity-75"
-                    >
-                      {event.image ? (
-                        <div className="h-48 bg-cover bg-center" style={{ backgroundImage: `url(${event.image})` }}>
-                          <div className="h-full bg-gradient-to-t from-slate-900 to-transparent flex items-center justify-center">
-                            <CheckCircle size={64} className="text-green-400" />
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {completedEvents.map((event) => (
+                      <div
+                        key={event._id}
+                        className="group relative bg-slate-800/30 backdrop-blur-xl border border-slate-700/40 rounded-2xl shadow-xl overflow-hidden opacity-75 hover:opacity-100 transition-all duration-300"
+                      >
+                        {event.image ? (
+                          <div className="h-52 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${event.image})` }}>
+                            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                              <CheckCircle size={56} className="text-green-400" />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-52 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center relative overflow-hidden">
+                            <CheckCircle size={56} className="text-green-400" />
+                          </div>
+                        )}
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-white mb-3 line-clamp-2">{event.title}</h3>
+                          <div className="space-y-2.5 text-sm text-slate-400 mb-5">
+                            <div className="flex items-center gap-2.5">
+                              <Calendar size={16} className="text-green-400" />
+                              <span>{new Date(event.date).toLocaleDateString()}</span>
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center gap-2.5">
+                                <MapPin size={16} className="text-green-400" />
+                                <span className="line-clamp-1">{event.location}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-center gap-2 px-4 py-3 bg-green-500/10 border border-green-500/50 text-green-400 font-semibold rounded-xl">
+                            <CheckCircle size={18} />
+                            Completed
                           </div>
                         </div>
-                      ) : (
-                        <div className="h-48 bg-slate-900/50 flex items-center justify-center">
-                          <CheckCircle size={64} className="text-green-400" />
-                        </div>
-                      )}
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
-                        <div className="space-y-2 text-slate-300 mb-4">
-                          <p className="flex items-center gap-2">
-                            <Calendar size={16} className="text-green-400" />
-                            {new Date(event.date).toLocaleDateString()}
-                          </p>
-                          {event.location && (
-                            <p className="flex items-center gap-2">
-                              <MapPin size={16} className="text-green-400" />
-                              {event.location}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 border border-green-400/30 text-green-400 font-bold rounded-xl">
-                          <CheckCircle size={16} />
-                          Completed
-                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {/* Profile Tab */}
             {activeTab === "profile" && (
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-gradient-to-br from-slate-800/50 to-blue-900/30 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-                  <h2 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                    <User className="text-cyan-400" size={32} />
-                    Profile Information
-                  </h2>
-                  
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-slate-400 mb-2">Full Name</label>
-                      <div className="px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white">
-                        {user?.name || "Not provided"}
+              <div className="max-w-3xl mx-auto">
+                <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-2xl p-8">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl">
+                        <UserIcon size={28} className="text-cyan-400" />
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-slate-400 mb-2">Email Address</label>
-                      <div className="px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white">
-                        {user?.email}
-                      </div>
-                    </div>
-
-                    {user?.phone && (
-                      <div>
-                        <label className="block text-slate-400 mb-2">Phone Number</label>
-                        <div className="px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white">
-                          {user.phone}
-                        </div>
-                      </div>
-                    )}
-
-                    {user?.role && (
-                      <div>
-                        <label className="block text-slate-400 mb-2">Role</label>
-                        <div className="px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white capitalize">
-                          {user.role}
-                        </div>
-                      </div>
-                    )}
-
-                    {user?.createdAt && (
-                      <div>
-                        <label className="block text-slate-400 mb-2">Member Since</label>
-                        <div className="px-4 py-3 bg-slate-900/50 border border-white/10 rounded-xl text-white">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    )}
+                      Profile Settings
+                    </h2>
+                    <button
+                      onClick={() => setEditMode(!editMode)}
+                      className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                        editMode 
+                          ? "bg-slate-700/50 text-slate-300 hover:bg-slate-700 border border-slate-600" 
+                          : "bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-lg hover:shadow-cyan-500/30"
+                      }`}
+                    >
+                      <Edit2 size={18} />
+                      {editMode ? "Cancel" : "Edit Profile"}
+                    </button>
                   </div>
+                  
+                  {editMode ? (
+                    <form onSubmit={handleProfileUpdate} className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Full Name</label>
+                        <input
+                          type="text"
+                          value={profileData.name}
+                          onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                          className="w-full px-5 py-3.5 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Email Address</label>
+                        <div className="px-5 py-3.5 bg-slate-900/50 border border-slate-700 rounded-xl text-slate-500 flex items-center gap-2">
+                          <Mail size={18} className="text-slate-600" />
+                          {user?.email} (cannot be changed)
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Phone Number</label>
+                        <input
+                          type="tel"
+                          value={profileData.phone}
+                          onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+                          className="w-full px-5 py-3.5 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                          placeholder="Enter your phone number"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-3">Bio</label>
+                        <textarea
+                          value={profileData.bio}
+                          onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
+                          className="w-full px-5 py-3.5 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all resize-none"
+                          placeholder="Tell us about yourself"
+                          rows="4"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-cyan-500/30 transition-all"
+                      >
+                        Save Changes
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                        <label className="block text-sm font-semibold text-slate-400 mb-2">Full Name</label>
+                        <div className="text-white text-lg font-medium">{user?.name || "Not provided"}</div>
+                      </div>
+
+                      <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                        <label className="block text-sm font-semibold text-slate-400 mb-2">Email Address</label>
+                        <div className="text-white text-lg font-medium flex items-center gap-2">
+                          <Mail size={18} className="text-cyan-400" />
+                          {user?.email}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                        <label className="block text-sm font-semibold text-slate-400 mb-2">Phone Number</label>
+                        <div className="text-white text-lg font-medium">{user?.phone || "Not provided"}</div>
+                      </div>
+
+                      {user?.bio && (
+                        <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                          <label className="block text-sm font-semibold text-slate-400 mb-2">Bio</label>
+                          <div className="text-white text-lg">{user.bio}</div>
+                        </div>
+                      )}
+
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {user?.role && (
+                          <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                            <label className="block text-sm font-semibold text-slate-400 mb-2">Role</label>
+                            <div className="text-white text-lg font-medium capitalize flex items-center gap-2">
+                              <Award size={18} className="text-purple-400" />
+                              {user.role}
+                            </div>
+                          </div>
+                        )}
+
+                        {user?.createdAt && (
+                          <div className="bg-slate-700/30 backdrop-blur-sm border border-slate-600/50 rounded-2xl p-5">
+                            <label className="block text-sm font-semibold text-slate-400 mb-2">Member Since</label>
+                            <div className="text-white text-lg font-medium">
+                              {new Date(user.createdAt).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
