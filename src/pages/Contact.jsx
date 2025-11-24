@@ -5,6 +5,8 @@ import { feedbackAPI } from '../services/api'; // Import the API helper
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 function Contact() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
   name: user?.name || '',
   email: user?.email || '',
@@ -14,8 +16,7 @@ function Contact() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  
   const handleChange = (e) => {
     setFormData({
       ...formData,
