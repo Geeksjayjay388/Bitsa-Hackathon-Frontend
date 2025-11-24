@@ -69,6 +69,9 @@ export const eventsAPI = {
     try {
       const response = await apiCall('/events/my/events', {}, true);
       
+      console.log('🔍 Raw API response from /events/my/events:', response);
+      
+      // Handle different response formats
       if (Array.isArray(response)) {
         return response;
       } else if (response.data && Array.isArray(response.data)) {
@@ -77,25 +80,39 @@ export const eventsAPI = {
         return response.events;
       }
       
-      console.error('Unexpected response format from /events/my/events:', response);
+      console.error('❌ Unexpected response format from /events/my/events:', response);
       return [];
     } catch (error) {
-      console.error('Error fetching my events:', error);
+      console.error('❌ Error fetching my events:', error);
       throw error;
     }
   },
   
-  approveRegistration: (registrationId, notes = '') => 
-    apiCall(`/registrations/${registrationId}/approve`, {
-      method: 'PUT',
-      body: JSON.stringify({ notes })
-    }, true),
+  approveRegistration: async (registrationId, notes = '') => {
+    try {
+      const response = await apiCall(`/admin/registrations/${registrationId}/approve`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes })
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('❌ Error approving registration:', error);
+      throw error;
+    }
+  },
   
-  rejectRegistration: (registrationId, notes = '') => 
-    apiCall(`/registrations/${registrationId}/reject`, {
-      method: 'PUT',
-      body: JSON.stringify({ notes })
-    }, true),
+  rejectRegistration: async (registrationId, notes = '') => {
+    try {
+      const response = await apiCall(`/admin/registrations/${registrationId}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify({ notes })
+      }, true);
+      return response;
+    } catch (error) {
+      console.error('❌ Error rejecting registration:', error);
+      throw error;
+    }
+  },
 };
 
 // ===== BLOGS =====
@@ -121,8 +138,8 @@ export const galleryAPI = {
 
 // ===== FEEDBACK =====
 export const feedbackAPI = {
-  submit: (data) => apiCall('/feedback', { method: 'POST', body: JSON.stringify(data) }, true), // Now requires auth
-  getMy: () => apiCall('/feedback/my', {}, true), // Get user's own feedback with responses
+  submit: (data) => apiCall('/feedback', { method: 'POST', body: JSON.stringify(data) }, true),
+  getMy: () => apiCall('/feedback/my', {}, true),
 };
 
 // ===== ADMIN =====
@@ -138,18 +155,41 @@ export const adminAPI = {
     try {
       const response = await apiCall(`/admin/events/${eventId}/registrations`, {}, true);
       
+      console.log('🔍 Raw registrations response:', response);
+      
+      // Backend returns: { success: true, eventId: '...', count: 3, data: [...] }
+      // OR the old format: { success: true, eventId: '...', total: 3, users: [...] }
+      
       if (response.data && Array.isArray(response.data)) {
+        // New format - already correct
+        console.log('✅ Found data array with', response.data.length, 'registrations');
         return { data: response.data };
+      } else if (response.users && Array.isArray(response.users)) {
+        // Old format - transform it
+        console.log('⚠️ Found users array (old format), transforming...');
+        const registrations = response.users.map(regUser => ({
+          _id: regUser._id,
+          user: regUser.user,
+          status: regUser.status || 'pending',
+          registeredAt: regUser.registeredAt,
+          notes: regUser.notes
+        }));
+        console.log('✅ Transformed', registrations.length, 'registrations');
+        return { data: registrations };
       } else if (Array.isArray(response)) {
+        // Direct array response
+        console.log('✅ Found direct array with', response.length, 'registrations');
         return { data: response };
       } else if (response.registrations && Array.isArray(response.registrations)) {
+        // Another possible format
+        console.log('✅ Found registrations array with', response.registrations.length, 'items');
         return { data: response.registrations };
       }
       
-      console.error('Unexpected response format:', response);
+      console.error('❌ Unexpected response format:', response);
       return { data: [] };
     } catch (error) {
-      console.error('Error fetching event registrations:', error);
+      console.error('❌ Error fetching event registrations:', error);
       return { data: [] };
     }
   },
@@ -179,7 +219,7 @@ export const adminAPI = {
       
       return data;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('❌ Upload error:', error);
       throw error;
     }
   },
