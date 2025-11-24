@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { eventsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Clock, MapPin, Users, Sparkles } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Sparkles, Lock } from 'lucide-react';
 
 function Events() {
   const { user } = useAuth();
@@ -30,25 +30,49 @@ function Events() {
     }
   };
 
-  const handleRegister = async (eventId) => {
-    try {
-      await eventsAPI.register(eventId);
-      fetchEvents(); // Refresh events
-      alert('Successfully registered for event!');
-    } catch (err) {
-      alert(err.message || 'Registration failed');
-    }
-  };
+  
 
-  const handleUnregister = async (eventId) => {
-    try {
-      await eventsAPI.unregister(eventId);
-      fetchEvents(); // Refresh events
-      alert('Successfully unregistered from event');
-    } catch (err) {
-      alert(err.message || 'Unregistration failed');
-    }
-  };
+ const handleRegister = async (eventId) => {
+  // Find the event to check status
+  const event = events.find(e => e._id === eventId);
+  
+  // Check if event is ongoing or completed
+  if (event && (event.status === 'ongoing' || event.status === 'completed')) {
+    alert('Registration is not available for this event. Event is ' + event.status + '.');
+    return;
+  }
+  
+  // Check if registration is closed
+  if (event && event.registrationOpen === false) {
+    alert('Registration is currently closed for this event');
+    return;
+  }
+
+  // Check if user is logged in
+  if (!user) {
+    alert('Please login to register for events');
+    window.location.href = '/login';
+    return;
+  }
+
+  try {
+    await eventsAPI.register(eventId);
+    fetchEvents(); // Refresh events
+    alert('Registration submitted successfully! Your registration is pending admin approval.');
+  } catch (err) {
+    alert(err.message || 'Registration failed');
+  }
+};
+
+const handleUnregister = async (eventId) => {
+  try {
+    await eventsAPI.unregister(eventId);
+    fetchEvents(); // Refresh events
+    alert('Successfully unregistered from event');
+  } catch (err) {
+    alert(err.message || 'Unregistration failed');
+  }
+};
 
   if (loading) {
     return (
@@ -144,6 +168,7 @@ function Events() {
               {events.map((event, index) => {
                 const isRegistered = event.registeredUsers?.includes(user?.id);
                 const isFull = event.registeredUsers?.length >= event.capacity;
+                const registrationClosed = event.registrationOpen === false;
 
                 return (
                   <div
@@ -178,6 +203,16 @@ function Events() {
                           {event.category}
                         </span>
                       </div>
+
+                      {/* Registration Closed Badge */}
+                      {registrationClosed && (
+                        <div className="absolute bottom-4 left-4">
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-500 flex items-center gap-1">
+                            <Lock size={12} />
+                            Closed
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Event Details */}
@@ -210,27 +245,46 @@ function Events() {
                         </div>
                       </div>
 
+                     
                       {/* Registration Button */}
-                      {isRegistered ? (
-                        <button
-                          onClick={() => handleUnregister(event._id)}
-                          className="w-full py-3 bg-red-500/20 border border-red-500 text-red-400 font-bold rounded-xl hover:bg-red-500/30 transition-all duration-300 hover:scale-105"
-                        >
-                          Unregister
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleRegister(event._id)}
-                          disabled={isFull}
-                          className={`w-full py-3 font-bold rounded-xl transition-all duration-300 ${
-                            isFull
-                              ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                              : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105'
-                          }`}
-                        >
-                          {isFull ? 'Event Full' : 'Register Now'}
-                        </button>
-                      )}
+{event.status === 'ongoing' || event.status === 'completed' ? (
+  // Event is ongoing or completed - cannot register
+  <div className="w-full py-3 px-4 bg-slate-500/10 border border-slate-500/50 text-slate-400 font-bold rounded-xl text-center">
+    <div className="flex items-center justify-center gap-2">
+      <Lock size={16} />
+      {event.status === 'completed' ? 'Event Completed' : 'Event Ongoing - Registration Closed'}
+    </div>
+  </div>
+) : registrationClosed ? (
+  // Registration manually closed by admin
+  <div className="w-full py-3 px-4 bg-orange-500/10 border border-orange-500/50 text-orange-400 font-bold rounded-xl text-center">
+    <div className="flex items-center justify-center gap-2">
+      <Lock size={16} />
+      Registration Closed
+    </div>
+  </div>
+) : isRegistered ? (
+  // User is already registered (any status: pending, approved, rejected)
+  <button
+    onClick={() => handleUnregister(event._id)}
+    className="w-full py-3 bg-red-500/20 border border-red-500 text-red-400 font-bold rounded-xl hover:bg-red-500/30 transition-all duration-300 hover:scale-105"
+  >
+    Cancel Registration
+  </button>
+) : (
+  // Can register
+  <button
+    onClick={() => handleRegister(event._id)}
+    disabled={isFull}
+    className={`w-full py-3 font-bold rounded-xl transition-all duration-300 ${
+      isFull
+        ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 hover:shadow-lg hover:shadow-cyan-400/50 hover:scale-105'
+    }`}
+  >
+    {isFull ? 'Event Full' : 'Register Now'}
+  </button>
+)}
                     </div>
                   </div>
                 );

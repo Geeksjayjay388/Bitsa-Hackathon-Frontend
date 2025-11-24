@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { feedbackAPI } from '../services/api'; // Import the API helper
-
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 function Contact() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
+  name: user?.name || '',
+  email: user?.email || '',
+  subject: '',
+  message: ''
+});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -22,36 +24,54 @@ function Contact() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess(false);
+  e.preventDefault();
+  
+  // Check if user is logged in
+  if (!user) {
+    setError('Please log in or sign up to submit feedback');
+    setTimeout(() => {
+      navigate('/login', { state: { from: '/contact' } });
+    }, 2000);
+    return;
+  }
+  
+  setLoading(true);
+  setError('');
+  setSuccess(false);
+  
+  try {
+    const response = await feedbackAPI.submit({
+      name: formData.name,
+      email: formData.email,
+      subject: formData.subject,
+      message: formData.message
+    });
+
+    console.log('✅ Feedback submitted:', response);
+    setSuccess(true);
+    setFormData({ 
+      name: user?.name || '', 
+      email: user?.email || '', 
+      subject: '', 
+      message: '' 
+    });
     
-    try {
-      // Use the feedbackAPI from your api.js file
-      const response = await feedbackAPI.submit({
-        name: formData.name,
-        email: formData.email,
-        subject: formData.subject,
-        message: formData.message
-      });
-
-      console.log('✅ Feedback submitted:', response);
-
-      // Success!
-      setSuccess(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-      
-      // Auto-hide success message after 5 seconds
-      setTimeout(() => setSuccess(false), 5000);
-      
-    } catch (err) {
-      console.error('❌ Feedback error:', err);
+    setTimeout(() => setSuccess(false), 5000);
+    
+  } catch (err) {
+    console.error('❌ Feedback error:', err);
+    if (err.message.includes('log in') || err.message.includes('sign up')) {
+      setError(err.message);
+      setTimeout(() => {
+        navigate('/login', { state: { from: '/contact' } });
+      }, 2000);
+    } else {
       setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const contactInfo = [
     {

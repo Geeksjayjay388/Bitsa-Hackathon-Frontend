@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { eventsAPI, authAPI } from "../services/api";
+import { feedbackAPI } from "../services/api";
+import { MessageSquare } from "lucide-react";
+import { XCircle, Clock as ClockIcon } from "lucide-react";
 import { 
   Calendar, 
   Clock, 
@@ -34,7 +37,13 @@ function UserDashboard() {
   });
   const [uploading, setUploading] = useState(false);
   const [profilePictureUrl, setProfilePictureUrl] = useState(user?.profilePicture || null);
-
+  const [myFeedback, setMyFeedback] = useState([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  useEffect(() => {
+  if (activeTab === 'feedback' && user?.id) {
+    fetchMyFeedback();
+  }
+  }, [activeTab, user]);
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -47,42 +56,51 @@ function UserDashboard() {
   }, [user]);
 
   useEffect(() => {
-    const fetchRegisteredEvents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await eventsAPI.getMyEvents();
-        
-        let eventsArray = [];
-        if (Array.isArray(data)) {
-          eventsArray = data;
-        } else if (data.events && Array.isArray(data.events)) {
-          eventsArray = data.events;
-        } else if (data.data && Array.isArray(data.data)) {
-          eventsArray = data.data;
-        }
-        
-        const processedEvents = eventsArray.map(event => ({
-          ...event,
-          status: new Date(event.date) < new Date() ? 'completed' : 'upcoming'
-        }));
-        
-        setRegisteredEvents(processedEvents);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setError(error.message || 'Failed to load your events');
-      } finally {
-        setLoading(false);
+  const fetchRegisteredEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await eventsAPI.getMyEvents();
+      
+      console.log('🔍 Raw data from API:', data); // DEBUG
+      
+      let eventsArray = [];
+      if (Array.isArray(data)) {
+        eventsArray = data;
+      } else if (data.events && Array.isArray(data.events)) {
+        eventsArray = data.events;
+      } else if (data.data && Array.isArray(data.data)) {
+        eventsArray = data.data;
       }
-    };
-
-    if (user?.id) {
-      fetchRegisteredEvents();
-    } else {
+      
+      console.log('📦 Events array:', eventsArray); // DEBUG
+      console.log('🎯 First event:', eventsArray[0]); // DEBUG
+      console.log('✅ Registration status of first event:', eventsArray[0]?.registrationStatus); // DEBUG
+      
+      const processedEvents = eventsArray.map(event => ({
+        ...event,
+        status: new Date(event.date) < new Date() ? 'completed' : 'upcoming'
+      }));
+      
+      console.log('⚙️ Processed events:', processedEvents); // DEBUG
+      console.log('📊 Pending count:', processedEvents.filter(e => e.registrationStatus === 'pending').length); // DEBUG
+      
+      setRegisteredEvents(processedEvents);
+    } catch (error) {
+      console.error("❌ Error fetching events:", error);
+      setError(error.message || 'Failed to load your events');
+    } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
+
+  if (user?.id) {
+    fetchRegisteredEvents();
+  } else {
+    setLoading(false);
+  }
+}, [user]);
 
   const handleCancelRegistration = async (eventId) => {
     if (!window.confirm('Are you sure you want to cancel this registration?')) return;
@@ -96,7 +114,18 @@ function UserDashboard() {
       alert(error.message || 'Failed to cancel registration');
     }
   };
-
+const fetchMyFeedback = async () => {
+  try {
+    setLoadingFeedback(true);
+    const response = await feedbackAPI.getMy();
+    const feedbackData = response.data || response || [];
+    setMyFeedback(feedbackData);
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+  } finally {
+    setLoadingFeedback(false);
+  }
+};
   const handleProfilePictureUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -167,8 +196,11 @@ function UserDashboard() {
   };
 
   const displayName = user?.name || user?.email?.split('@')[0] || "User";
-  const upcomingEvents = registeredEvents.filter(e => e.status === "upcoming");
-  const completedEvents = registeredEvents.filter(e => e.status === "completed");
+  const approvedEvents = registeredEvents.filter(e => e.registrationStatus === 'approved');
+  const pendingEvents = registeredEvents.filter(e => e.registrationStatus === 'pending');
+  const rejectedEvents = registeredEvents.filter(e => e.registrationStatus === 'rejected');
+  const upcomingEvents = approvedEvents.filter(e => e.status === "upcoming");
+  const completedEvents = approvedEvents.filter(e => e.status === "completed");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pt-20 pb-12 px-4 sm:px-6 lg:px-8">
@@ -234,40 +266,40 @@ function UserDashboard() {
                 </p>
                 
                 {/* Stats Cards */}
-                <div className="flex flex-wrap gap-4">
-                  <div className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/30 px-6 py-3.5 rounded-2xl hover:border-cyan-400/50 transition-all">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative flex items-center gap-3">
-                      <TrendingUp className="text-cyan-400" size={24} />
-                      <div>
-                        <div className="text-3xl font-bold text-cyan-400">{upcomingEvents.length}</div>
-                        <div className="text-slate-400 text-sm font-medium">Upcoming</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group relative bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-sm border border-green-500/30 px-6 py-3.5 rounded-2xl hover:border-green-400/50 transition-all">
-                    <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative flex items-center gap-3">
-                      <CheckCircle className="text-green-400" size={24} />
-                      <div>
-                        <div className="text-3xl font-bold text-green-400">{completedEvents.length}</div>
-                        <div className="text-slate-400 text-sm font-medium">Completed</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="group relative bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm border border-purple-500/30 px-6 py-3.5 rounded-2xl hover:border-purple-400/50 transition-all">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div className="relative flex items-center gap-3">
-                      <Award className="text-purple-400" size={24} />
-                      <div>
-                        <div className="text-3xl font-bold text-purple-400">{registeredEvents.length}</div>
-                        <div className="text-slate-400 text-sm font-medium">Total Events</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+<div className="flex flex-wrap gap-4">
+  <div className="group relative bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/30 px-6 py-3.5 rounded-2xl hover:border-cyan-400/50 transition-all">
+    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <div className="relative flex items-center gap-3">
+      <TrendingUp className="text-cyan-400" size={24} />
+      <div>
+        <div className="text-3xl font-bold text-cyan-400">{approvedEvents.length}</div>
+        <div className="text-slate-400 text-sm font-medium">Approved</div>
+      </div>
+    </div>
+  </div>
+
+  <div className="group relative bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border border-yellow-500/30 px-6 py-3.5 rounded-2xl hover:border-yellow-400/50 transition-all">
+    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <div className="relative flex items-center gap-3">
+      <ClockIcon className="text-yellow-400" size={24} />
+      <div>
+        <div className="text-3xl font-bold text-yellow-400">{pendingEvents.length}</div>
+        <div className="text-slate-400 text-sm font-medium">Pending</div>
+      </div>
+    </div>
+  </div>
+
+  <div className="group relative bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-sm border border-purple-500/30 px-6 py-3.5 rounded-2xl hover:border-purple-400/50 transition-all">
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <div className="relative flex items-center gap-3">
+      <Award className="text-purple-400" size={24} />
+      <div>
+        <div className="text-3xl font-bold text-purple-400">{registeredEvents.length}</div>
+        <div className="text-slate-400 text-sm font-medium">Total</div>
+      </div>
+    </div>
+  </div>
+</div>
               </div>
             </div>
           </div>
@@ -275,58 +307,75 @@ function UserDashboard() {
 
         {/* Tabs */}
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-2 mb-8 inline-flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab("registered")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "registered"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
-                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Ticket size={18} />
-              Registered ({registeredEvents.length})
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab("upcoming")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "upcoming"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
-                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <TrendingUp size={18} />
-              Upcoming ({upcomingEvents.length})
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab("completed")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "completed"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
-                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <CheckCircle size={18} />
-              Completed ({completedEvents.length})
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-              activeTab === "profile"
-                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
-                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <UserIcon size={18} />
-              Profile
-            </span>
-          </button>
+          {/* REPLACE the existing 4 buttons with these: */}
+<button
+  onClick={() => setActiveTab("registered")}
+  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+    activeTab === "registered"
+      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+  }`}
+>
+  <span className="flex items-center gap-2">
+    <Ticket size={18} />
+    All ({registeredEvents.length})
+  </span>
+</button>
+
+<button
+  onClick={() => setActiveTab("approved")}
+  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+    activeTab === "approved"
+      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+  }`}
+>
+  <span className="flex items-center gap-2">
+    <CheckCircle size={18} />
+    Approved ({approvedEvents.length})
+  </span>
+</button>
+
+<button
+  onClick={() => setActiveTab("pending")}
+  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+    activeTab === "pending"
+      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+  }`}
+>
+  <span className="flex items-center gap-2">
+    <ClockIcon size={18} />
+    Pending ({pendingEvents.length})
+  </span>
+</button>
+
+<button
+  onClick={() => setActiveTab("profile")}
+  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+    activeTab === "profile"
+      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+  }`}
+>
+  <span className="flex items-center gap-2">
+    <UserIcon size={18} />
+    Profile
+  </span>
+</button>
+<button
+  onClick={() => setActiveTab("feedback")}
+  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+    activeTab === "feedback"
+      ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30"
+      : "text-slate-300 hover:text-white hover:bg-slate-700/50"
+  }`}
+>
+  <span className="flex items-center gap-2">
+    <MessageSquare size={18} />
+    My Feedback ({myFeedback.length})
+  </span>
+</button>
         </div>
 
         {/* Error State */}
@@ -404,6 +453,25 @@ function UserDashboard() {
                         <div className="p-6">
                           <div className="flex items-start justify-between mb-3">
                             <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors line-clamp-2">{event.title}</h3>
+                            
+                            {event.registrationStatus === 'approved' && (
+                              <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full whitespace-nowrap ml-2 flex items-center gap-1">
+                                <CheckCircle size={14} />
+                                Approved
+                              </span>
+                            )}
+                            {event.registrationStatus === 'pending' && (
+                              <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold rounded-full whitespace-nowrap ml-2 flex items-center gap-1">
+                                <ClockIcon size={14} />
+                                Pending
+                              </span>
+                            )}
+                            {event.registrationStatus === 'rejected' && (
+                              <span className="px-3 py-1 bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold rounded-full whitespace-nowrap ml-2 flex items-center gap-1">
+                                <XCircle size={14} />
+                                Rejected
+                              </span>
+                            )}
                             {event.status === 'completed' && (
                               <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full whitespace-nowrap ml-2">
                                 Completed
@@ -590,6 +658,360 @@ function UserDashboard() {
               </div>
             )}
 
+{/* Approved Tab */}
+{activeTab === "approved" && (
+  <div>
+    {approvedEvents.length === 0 ? (
+      <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+        <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <CheckCircle size={40} className="text-slate-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-3">No Approved Events</h3>
+        <p className="text-slate-400 text-lg">Your approved events will appear here</p>
+      </div>
+    ) : (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {approvedEvents.map((event) => (
+          <div
+            key={event._id}
+            className="group relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden hover:border-green-500/50 transition-all duration-300"
+          >
+            {event.image ? (
+              <div className="h-52 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${event.image})` }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+              </div>
+            ) : (
+              <div className="h-52 bg-gradient-to-br from-green-900/30 via-cyan-900/30 to-blue-900/30 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50"></div>
+                <CheckCircle size={56} className="text-green-400 relative z-10" />
+              </div>
+            )}
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-xl font-bold text-white group-hover:text-green-400 transition-colors line-clamp-2 flex-1">
+                  {event.title}
+                </h3>
+                <span className="px-3 py-1 bg-green-500/20 border border-green-500/50 text-green-400 text-xs font-bold rounded-full whitespace-nowrap ml-2 flex items-center gap-1">
+                  <CheckCircle size={14} />
+                  Approved
+                </span>
+              </div>
+              {event.description && (
+                <p className="text-slate-400 text-sm mb-4 line-clamp-2">{event.description}</p>
+              )}
+              <div className="space-y-2.5 text-sm text-slate-400 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <Calendar size={16} className="text-green-400" />
+                  <span>{new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                {event.time && (
+                  <div className="flex items-center gap-2.5">
+                    <Clock size={16} className="text-green-400" />
+                    <span>{event.time}</span>
+                  </div>
+                )}
+                {event.location && (
+                  <div className="flex items-center gap-2.5">
+                    <MapPin size={16} className="text-green-400" />
+                    <span className="line-clamp-1">{event.location}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <a
+                  href={`/events/${event._id}`}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-green-500/30 transition-all"
+                >
+                  <Eye size={18} />
+                  View Details
+                </a>
+                {event.status === 'upcoming' && (
+                  <button
+                    onClick={() => handleCancelRegistration(event._id)}
+                    className="flex items-center justify-center gap-2 px-4 py-3 border border-red-500/50 bg-red-500/10 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+{/* Pending Tab */}
+{activeTab === "pending" && (
+  <div>
+    {pendingEvents.length === 0 ? (
+      <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+        <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <ClockIcon size={40} className="text-slate-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-3">No Pending Registrations</h3>
+        <p className="text-slate-400 text-lg">Your pending registrations will appear here</p>
+        <p className="text-slate-500 text-sm mt-2">Registrations are awaiting admin approval</p>
+      </div>
+    ) : (
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {pendingEvents.map((event) => (
+          <div
+            key={event._id}
+            className="group relative bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden hover:border-yellow-500/50 transition-all duration-300"
+          >
+            {event.image ? (
+              <div className="h-52 bg-cover bg-center relative overflow-hidden" style={{ backgroundImage: `url(${event.image})` }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                <div className="absolute inset-0 bg-yellow-500/10 backdrop-blur-[1px]"></div>
+              </div>
+            ) : (
+              <div className="h-52 bg-gradient-to-br from-yellow-900/30 via-orange-900/30 to-amber-900/30 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/50"></div>
+                <ClockIcon size={56} className="text-yellow-400 relative z-10 animate-pulse" />
+              </div>
+            )}
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors line-clamp-2 flex-1">
+                  {event.title}
+                </h3>
+                <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-xs font-bold rounded-full whitespace-nowrap ml-2 flex items-center gap-1 animate-pulse">
+                  <ClockIcon size={14} />
+                  Pending
+                </span>
+              </div>
+              {event.description && (
+                <p className="text-slate-400 text-sm mb-4 line-clamp-2">{event.description}</p>
+              )}
+              
+              {/* Pending Notice */}
+              <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <p className="text-yellow-400 text-xs font-semibold flex items-center gap-2">
+                  <ClockIcon size={14} />
+                  Awaiting admin approval
+                </p>
+              </div>
+
+              <div className="space-y-2.5 text-sm text-slate-400 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <Calendar size={16} className="text-yellow-400" />
+                  <span>{new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                {event.time && (
+                  <div className="flex items-center gap-2.5">
+                    <Clock size={16} className="text-yellow-400" />
+                    <span>{event.time}</span>
+                  </div>
+                )}
+                {event.location && (
+                  <div className="flex items-center gap-2.5">
+                    <MapPin size={16} className="text-yellow-400" />
+                    <span className="line-clamp-1">{event.location}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <a
+                  href={`/events/${event._id}`}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-yellow-500/30 transition-all"
+                >
+                  <Eye size={18} />
+                  View Details
+                </a>
+                <button
+                  onClick={() => handleCancelRegistration(event._id)}
+                  className="flex items-center justify-center gap-2 px-4 py-3 border border-red-500/50 bg-red-500/10 text-red-400 font-semibold rounded-xl hover:bg-red-500/20 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+{/* Feedback Tab */}
+{activeTab === "feedback" && (
+  <div>
+    <div className="mb-6 flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+        <MessageSquare className="text-cyan-400" size={28} />
+        My Feedback & Inquiries
+      </h2>
+      
+    </div>
+
+    {loadingFeedback ? (
+      <div className="text-center py-20">
+        <div className="inline-block w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-slate-400 text-lg font-medium">Loading your feedback...</p>
+      </div>
+    ) : myFeedback.length === 0 ? (
+      <div className="text-center py-20 bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-3xl shadow-xl">
+        <div className="w-24 h-24 bg-gradient-to-br from-slate-700 to-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+          <MessageSquare size={40} className="text-slate-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-3">No Feedback Yet</h3>
+        <p className="text-slate-400 text-lg mb-8">You haven't submitted any feedback or inquiries</p>
+        
+      </div>
+    ) : (
+      <div className="grid gap-6">
+        {myFeedback.map((feedback) => (
+          <div
+            key={feedback._id}
+            className={`bg-slate-800/50 backdrop-blur-xl border rounded-2xl shadow-xl overflow-hidden transition-all ${
+              feedback.status === 'replied'
+                ? 'border-green-500/50 hover:border-green-500'
+                : feedback.status === 'read'
+                ? 'border-blue-500/50 hover:border-blue-500'
+                : 'border-slate-700/50 hover:border-cyan-500/50'
+            }`}
+          >
+            {/* Feedback Header */}
+            <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/50 p-6 border-b border-slate-700/50">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    {feedback.subject}
+                    {feedback.status === 'replied' && (
+                      <CheckCircle size={20} className="text-green-400" />
+                    )}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={14} className="text-cyan-400" />
+                      {new Date(feedback.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={14} className="text-cyan-400" />
+                      {new Date(feedback.createdAt).toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                <span className={`px-4 py-2 rounded-xl text-xs font-bold border whitespace-nowrap ${
+                  feedback.status === 'replied'
+                    ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                    : feedback.status === 'read'
+                    ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                    : 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400'
+                }`}>
+                  {feedback.status === 'replied' && (
+                    <span className="flex items-center gap-1">
+                      <CheckCircle size={14} />
+                      Replied
+                    </span>
+                  )}
+                  {feedback.status === 'read' && (
+                    <span className="flex items-center gap-1">
+                      <Eye size={14} />
+                      Read
+                    </span>
+                  )}
+                  {feedback.status === 'pending' && (
+                    <span className="flex items-center gap-1">
+                      <ClockIcon size={14} />
+                      Pending
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            {/* Your Message */}
+            <div className="p-6">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                    {feedback.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">Your Message</p>
+                    <p className="text-slate-500 text-xs">{feedback.name}</p>
+                  </div>
+                </div>
+                <div className="bg-slate-700/30 border border-slate-600/50 rounded-xl p-4">
+                  <p className="text-slate-300 leading-relaxed whitespace-pre-wrap">
+                    {feedback.message}
+                  </p>
+                </div>
+              </div>
+
+              {/* Admin Response */}
+              {feedback.response && (
+                <div className="mt-6 pt-6 border-t border-slate-700/50">
+                  <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 border border-green-500/30 rounded-xl p-5">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-cyan-600 flex items-center justify-center text-white font-bold shadow-lg">
+                        A
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-green-400 font-bold">Admin Response</p>
+                          <CheckCircle size={16} className="text-green-400" />
+                        </div>
+                        {feedback.respondedAt && (
+                          <p className="text-slate-500 text-xs">
+                            Responded on {new Date(feedback.respondedAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bg-slate-800/40 backdrop-blur-sm border border-green-500/20 rounded-lg p-4 ml-13">
+                      <p className="text-slate-200 leading-relaxed whitespace-pre-wrap">
+                        {feedback.response}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Pending/Read Notice */}
+              {!feedback.response && feedback.status === 'pending' && (
+                <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-yellow-400">
+                    <ClockIcon size={18} />
+                    <p className="text-sm font-semibold">
+                      Your feedback has been submitted and is awaiting review by our team.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!feedback.response && feedback.status === 'read' && (
+                <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-blue-400">
+                    <Eye size={18} />
+                    <p className="text-sm font-semibold">
+                      Your feedback has been read by our team. We'll respond shortly.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
             {/* Profile Tab */}
             {activeTab === "profile" && (
               <div className="max-w-3xl mx-auto">

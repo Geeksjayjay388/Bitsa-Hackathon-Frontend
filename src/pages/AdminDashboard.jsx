@@ -2,7 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI, eventsAPI, blogsAPI, galleryAPI } from '../services/api';
-import { BarChart3, Calendar, FileText, Image, MessageSquare, Users, Plus, Edit, Trash2, X, Save, Upload, Eye, Heart, Star, Check, Clock, MapPin, Trophy, UserCheck, ChevronDown, ChevronUp } from 'lucide-react';
+import { 
+  BarChart3, 
+  Calendar, 
+  FileText, 
+  Image, 
+  MessageSquare, 
+  Users, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  X, 
+  Save, 
+  Upload, 
+  Eye, 
+  Heart, 
+  Star, 
+  Check, 
+  Clock, 
+  MapPin, 
+  Trophy, 
+  UserCheck,  
+  ChevronDown, 
+  ChevronUp,
+  CheckCircle,  
+  XCircle,  
+  Mail
+} from 'lucide-react';
 function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -21,11 +47,25 @@ function AdminDashboard() {
   const [formData, setFormData] = useState({});
   const [galleryFile, setGalleryFile] = useState(null);
   const [expandedEvent, setExpandedEvent] = useState(null);
-
+  const [eventRegistrations, setEventRegistrations] = useState({});
+  const [registrations, setRegistrations] = useState([]);
+  const [selectedEventForRegistrations, setSelectedEventForRegistrations] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
+useEffect(() => {
+  if (activeTab === 'registrations') {
+    // Pre-load registrations for all events
+    events.forEach(event => {
+      if (event._id) {
+        fetchEventRegistrations(event._id);
+      }
+    });
+  }
+}, [activeTab]);
   const fetchDashboardData = async () => {
     try {
       const [statsData, eventsData, blogsData, galleryData] = await Promise.all([
@@ -173,16 +213,351 @@ function AdminDashboard() {
       alert('Error deleting: ' + error.message);
     }
   };
+const fetchEventRegistrations = async (eventId) => {
+  try {
+    setLoading(true);
+    const response = await adminAPI.getEventRegistrations(eventId);
+    setRegistrations(response.data || []);
+    console.log('Fetched registrations:', response.data); // Debug log
+  } catch (error) {
+    console.error('Error fetching registrations:', error);
+    setRegistrations([]);
+  } finally {
+    setLoading(false);
+  }
+};
+const handleApproveRegistration = async (registrationId) => {
+  if (!window.confirm('Approve this registration?')) return;
+  
+  try {
+    await eventsAPI.approveRegistration(registrationId);
+    alert('Registration approved successfully!');
+    if (selectedEventForRegistrations) {
+      fetchEventRegistrations(selectedEventForRegistrations);
+    }
+  } catch (error) {
+    console.error('Error approving registration:', error);
+    alert('Failed to approve registration: ' + error.message);
+  }
+};
+const handleRejectRegistration = async (registrationId) => {
+  const notes = window.prompt('Reason for rejection (optional):');
+  if (notes === null) return; // User cancelled
+  
+  try {
+    await eventsAPI.rejectRegistration(registrationId, notes);
+    alert('Registration rejected');
+    if (selectedEventForRegistrations) {
+      fetchEventRegistrations(selectedEventForRegistrations);
+    }
+  } catch (error) {
+    console.error('Error rejecting registration:', error);
+    alert('Failed to reject registration: ' + error.message);
+  }
+};
+const handleToggleRegistration = async (eventId, currentStatus) => {
+  const action = currentStatus ? 'close' : 'open';
+  if (!window.confirm(`Are you sure you want to ${action} registrations for this event?`)) return;
+  
+  try {
+    await adminAPI.updateEvent(eventId, { registrationOpen: !currentStatus });
+    alert(`Registrations ${action === 'close' ? 'closed' : 'opened'} successfully!`);
+    await fetchDashboardData();
+  } catch (error) {
+    console.error('Error toggling registration:', error);
+    alert('Failed to update registration status');
+  }
+};
+const handleSendReply = async (feedbackId) => {
+  if (!replyMessage.trim()) {
+    alert('Please enter a reply message');
+    return;
+  }
 
+  setSendingReply(true);
+  try {
+    await adminAPI.respondToFeedback(feedbackId, replyMessage);
+    alert('Reply sent successfully!');
+    setReplyingTo(null);
+    setReplyMessage('');
+    await fetchFeedback();
+  } catch (error) {
+    console.error('Error sending reply:', error);
+    alert('Failed to send reply: ' + error.message);
+  } finally {
+    setSendingReply(false);
+  }
+};
+const handleUpdateStatus = async (feedbackId, newStatus) => {
+  try {
+    await adminAPI.updateFeedbackStatus(feedbackId, { status: newStatus });
+    alert('Status updated successfully!');
+    await fetchFeedback();
+  } catch (error) {
+    console.error('Error updating status:', error);
+    alert('Failed to update status: ' + error.message);
+  }
+};
   const tabs = [
   { id: 'overview', name: 'Overview', icon: BarChart3 },
   { id: 'events', name: 'Events', icon: Calendar },
+  { id: 'registrations', name: 'Registrations', icon: UserCheck },
   { id: 'blogs', name: 'Blogs', icon: FileText },
   { id: 'gallery', name: 'Gallery', icon: Image },
   { id: 'feedback', name: 'Feedback', icon: MessageSquare },
   { id: 'users', name: 'Users', icon: Users },
 ];
+// Add this EventRegistrationItem component here (after handleToggleRegistration, before tabs array)
+function EventRegistrationItem({ 
+  event, 
+  selectedEventForRegistrations, 
+  setSelectedEventForRegistrations,
+  handleApproveRegistration,
+  handleRejectRegistration,
+  adminAPI 
+}) {
+  const [eventRegs, setEventRegs] = useState([]);
+  const [loadingRegs, setLoadingRegs] = useState(false);
+  const [regCounts, setRegCounts] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 });
 
+  // Fetch registration counts immediately when component mounts
+  useEffect(() => {
+    const fetchRegCounts = async () => {
+      try {
+        const response = await adminAPI.getEventRegistrations(event._id);
+        const regs = response.data || [];
+        setRegCounts({
+          pending: regs.filter(r => r.status === 'pending').length,
+          approved: regs.filter(r => r.status === 'approved').length,
+          rejected: regs.filter(r => r.status === 'rejected').length,
+          total: regs.length
+        });
+      } catch (error) {
+        console.error('Error fetching registration counts:', error);
+      }
+    };
+    fetchRegCounts();
+  }, [event._id, adminAPI]);
+
+  // Fetch full registration details when expanded
+  useEffect(() => {
+    if (selectedEventForRegistrations === event._id) {
+      const fetchRegs = async () => {
+        try {
+          setLoadingRegs(true);
+          const response = await adminAPI.getEventRegistrations(event._id);
+          const regs = response.data || [];
+          setEventRegs(regs);
+          // Update counts as well
+          setRegCounts({
+            pending: regs.filter(r => r.status === 'pending').length,
+            approved: regs.filter(r => r.status === 'approved').length,
+            rejected: regs.filter(r => r.status === 'rejected').length,
+            total: regs.length
+          });
+        } catch (error) {
+          console.error('Error fetching registrations:', error);
+          setEventRegs([]);
+        } finally {
+          setLoadingRegs(false);
+        }
+      };
+      fetchRegs();
+    }
+  }, [selectedEventForRegistrations, event._id, adminAPI]);
+
+  const handleApprove = async (registrationId) => {
+    await handleApproveRegistration(registrationId);
+    const response = await adminAPI.getEventRegistrations(event._id);
+    const regs = response.data || [];
+    setEventRegs(regs);
+    setRegCounts({
+      pending: regs.filter(r => r.status === 'pending').length,
+      approved: regs.filter(r => r.status === 'approved').length,
+      rejected: regs.filter(r => r.status === 'rejected').length,
+      total: regs.length
+    });
+  };
+
+  const handleReject = async (registrationId) => {
+    await handleRejectRegistration(registrationId);
+    const response = await adminAPI.getEventRegistrations(event._id);
+    const regs = response.data || [];
+    setEventRegs(regs);
+    setRegCounts({
+      pending: regs.filter(r => r.status === 'pending').length,
+      approved: regs.filter(r => r.status === 'approved').length,
+      rejected: regs.filter(r => r.status === 'rejected').length,
+      total: regs.length
+    });
+  };
+
+  return (
+    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+      {/* Event Header */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+        <div className="flex-1">
+          <h3 className="text-2xl font-bold text-white mb-2">{event.title}</h3>
+          <div className="flex flex-wrap gap-4 text-sm text-slate-400">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-cyan-400" />
+              <span>{new Date(event.date).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-cyan-400" />
+              <span>{event.venue}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users size={16} className="text-cyan-400" />
+              <span>{regCounts.approved}/{event.capacity} approved</span>
+            </div>
+            {regCounts.total > 0 && (
+              <div className="flex items-center gap-2">
+                <UserCheck size={16} className="text-yellow-400" />
+                <span className="text-yellow-400 font-semibold">
+                  {regCounts.total} total registrations
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <button
+          onClick={() => {
+            setSelectedEventForRegistrations(
+              selectedEventForRegistrations === event._id ? null : event._id
+            );
+          }}
+          className={`px-5 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+            selectedEventForRegistrations === event._id
+              ? 'bg-cyan-500 text-white'
+              : 'bg-white/10 text-slate-300 hover:bg-white/20'
+          }`}
+        >
+          {selectedEventForRegistrations === event._id ? (
+            <>
+              <ChevronUp size={18} />
+              Hide Registrations
+            </>
+          ) : (
+            <>
+              <ChevronDown size={18} />
+              View Registrations ({regCounts.total})
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Registrations Section */}
+      {selectedEventForRegistrations === event._id && (
+        <div className="space-y-4">
+          {loadingRegs ? (
+            <div className="text-center py-8">
+              <div className="inline-block w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-400">Loading registrations...</p>
+            </div>
+          ) : eventRegs.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="mx-auto text-slate-600 mb-4" size={40} />
+              <p className="text-slate-400">No registrations yet for this event</p>
+            </div>
+          ) : (
+            <>
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+                  <p className="text-yellow-400 text-sm font-semibold mb-1">Pending</p>
+                  <p className="text-2xl font-bold text-yellow-400">{regCounts.pending}</p>
+                </div>
+                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+                  <p className="text-green-400 text-sm font-semibold mb-1">Approved</p>
+                  <p className="text-2xl font-bold text-green-400">{regCounts.approved}</p>
+                </div>
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                  <p className="text-red-400 text-sm font-semibold mb-1">Rejected</p>
+                  <p className="text-2xl font-bold text-red-400">{regCounts.rejected}</p>
+                </div>
+              </div>
+
+              {/* Registration List */}
+              <div className="space-y-3">
+                {eventRegs.map((registration) => (
+                  <div
+                    key={registration._id}
+                    className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-cyan-400/50 transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                          {registration.user?.name?.charAt(0).toUpperCase() || 
+                           registration.user?.fullName?.charAt(0).toUpperCase() || 
+                           registration.user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold truncate">
+                            {registration.user?.name || 
+                             registration.user?.fullName || 
+                             registration.user?.email?.split('@')[0] || 
+                             'Unknown User'}
+                          </p>
+                          <p className="text-slate-400 text-sm truncate">
+                            {registration.user?.email || 'No email'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 whitespace-nowrap ${
+                          registration.status === 'approved' 
+                            ? 'bg-green-500/20 border border-green-500/50 text-green-400'
+                            : registration.status === 'rejected'
+                            ? 'bg-red-500/20 border border-red-500/50 text-red-400'
+                            : 'bg-yellow-500/20 border border-yellow-500/50 text-yellow-400'
+                        }`}>
+                          {registration.status === 'approved' && <CheckCircle size={12} />}
+                          {registration.status === 'rejected' && <XCircle size={12} />}
+                          {registration.status === 'pending' && <Clock size={12} />}
+                          {registration.status.charAt(0).toUpperCase() + registration.status.slice(1)}
+                        </span>
+
+                        {registration.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(registration._id)}
+                              className="px-3 py-1.5 bg-green-500/20 border border-green-500/50 text-green-400 rounded-lg hover:bg-green-500/30 transition-all font-semibold text-sm"
+                              title="Approve"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleReject(registration._id)}
+                              className="px-3 py-1.5 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/30 transition-all font-semibold text-sm"
+                              title="Reject"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {registration.notes && (
+                      <div className="mt-3 pt-3 border-t border-white/10">
+                        <p className="text-sm text-slate-400">
+                          <strong className="text-slate-300">Notes:</strong> {registration.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -329,6 +704,26 @@ function AdminDashboard() {
     Edit
   </button>
   <button
+    onClick={() => handleToggleRegistration(event._id, event.registrationOpen !== false)}
+    className={`px-4 py-2 rounded-lg transition-all text-sm font-bold flex items-center gap-1 ${
+      event.registrationOpen !== false
+        ? 'bg-orange-500/30 text-orange-200 border border-orange-400/50 hover:bg-orange-500/40'
+        : 'bg-green-500/30 text-green-200 border border-green-400/50 hover:bg-green-500/40'
+    }`}
+  >
+    {event.registrationOpen !== false ? (
+      <>
+        <XCircle size={16} />
+        Close Registration
+      </>
+    ) : (
+      <>
+        <CheckCircle size={16} />
+        Open Registration
+      </>
+    )}
+  </button>
+  <button
     onClick={() => handleDelete('event', event._id)}
     className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
   >
@@ -403,6 +798,38 @@ function AdminDashboard() {
   </div>
 )}
 
+{/* Registrations Tab - FIXED */}
+{activeTab === 'registrations' && (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-3xl font-black text-white">Event Registrations</h2>
+    </div>
+
+    {/* Events Grid with Registrations */}
+    <div className="grid grid-cols-1 gap-6">
+      {events.length === 0 ? (
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
+          <Calendar className="mx-auto text-slate-600 mb-4" size={48} />
+          <h3 className="text-2xl font-bold text-white mb-2">No Events Found</h3>
+          <p className="text-slate-400">Create an event to start receiving registrations</p>
+        </div>
+      ) : (
+        events.map((event) => (
+          <EventRegistrationItem 
+            key={event._id}
+            event={event}
+            selectedEventForRegistrations={selectedEventForRegistrations}
+            setSelectedEventForRegistrations={setSelectedEventForRegistrations}
+            handleApproveRegistration={handleApproveRegistration}
+            handleRejectRegistration={handleRejectRegistration}
+            adminAPI={adminAPI}
+          />
+        ))
+      )}
+    </div>
+  </div>
+)}
+        
           {/* Blogs Tab - FIXED COLORS */}
           {activeTab === 'blogs' && (
             <div className="space-y-6">
@@ -529,7 +956,193 @@ function AdminDashboard() {
               </div>
             </div>
           )}
+{/* Feedback Tab */}
+          {activeTab === 'feedback' && (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-3xl font-black text-white">Feedback Management</h2>
+      <div className="flex gap-3">
+        <span className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 rounded-xl text-yellow-300 font-semibold">
+          {feedback.filter(f => f.status === 'pending').length} Pending
+        </span>
+        <span className="px-4 py-2 bg-blue-500/20 border border-blue-500/50 rounded-xl text-blue-300 font-semibold">
+          {feedback.filter(f => f.status === 'read').length} Read
+        </span>
+        <span className="px-4 py-2 bg-green-500/20 border border-green-500/50 rounded-xl text-green-300 font-semibold">
+          {feedback.filter(f => f.status === 'replied').length} Replied
+        </span>
+      </div>
+    </div>
 
+    <div className="grid grid-cols-1 gap-4">
+      {feedback.map((item) => (
+        <div 
+          key={item._id} 
+          className={`bg-white/5 backdrop-blur-sm border rounded-2xl p-6 transition-all ${
+            item.status === 'pending' 
+              ? 'border-yellow-400/50 hover:border-yellow-400' 
+              : item.status === 'replied'
+              ? 'border-green-400/30 hover:border-green-400/50'
+              : 'border-white/10 hover:border-cyan-400/50'
+          }`}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                <span className="text-cyan-400 font-bold text-lg">
+                  {item.name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <p className="text-white font-bold">{item.name}</p>
+                <p className="text-slate-400 text-sm flex items-center gap-2">
+                  <Mail size={14} />
+                  {item.email}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-slate-500 text-sm">
+                {new Date(item.createdAt).toLocaleDateString()}
+              </span>
+              <span className={`px-3 py-1 rounded-lg text-xs font-bold border ${
+                item.status === 'pending' 
+                  ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-300'
+                  : item.status === 'read'
+                  ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+                  : 'bg-green-500/20 border-green-500/50 text-green-300'
+              }`}>
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </span>
+            </div>
+          </div>
+          
+          {/* Subject & Message */}
+          {item.subject && (
+            <h4 className="text-cyan-400 font-bold mb-2 text-lg">{item.subject}</h4>
+          )}
+          
+          <p className="text-slate-300 mb-4 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/10">
+            {item.message}
+          </p>
+
+          {/* Existing Admin Response */}
+          {item.response && (
+            <div className="mb-4 bg-green-500/10 border border-green-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle size={16} className="text-green-400" />
+                <span className="text-green-400 font-bold text-sm">Admin Response</span>
+                {item.respondedAt && (
+                  <span className="text-slate-500 text-xs ml-auto">
+                    {new Date(item.respondedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed">{item.response}</p>
+            </div>
+          )}
+
+          {/* Reply Form */}
+          {replyingTo === item._id ? (
+            <div className="mb-4 space-y-3">
+              <textarea
+                value={replyMessage}
+                onChange={(e) => setReplyMessage(e.target.value)}
+                placeholder="Type your reply here..."
+                rows="4"
+                className="w-full px-4 py-3 bg-white/5 border border-cyan-400/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 resize-none"
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleSendReply(item._id)}
+                  disabled={sendingReply || !replyMessage.trim()}
+                  className="px-4 py-2 bg-green-500/30 text-green-200 border border-green-400/50 rounded-lg hover:bg-green-500/40 transition-all text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingReply ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={16} />
+                      Send Reply
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setReplyingTo(null);
+                    setReplyMessage('');
+                  }}
+                  disabled={sendingReply}
+                  className="px-4 py-2 bg-white/5 text-slate-300 border border-white/10 rounded-lg hover:bg-white/10 transition-all text-sm font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : null}
+          
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {!item.response && (
+              <button
+                onClick={() => {
+                  setReplyingTo(item._id);
+                  setReplyMessage('');
+                }}
+                className="px-4 py-2 bg-cyan-500/30 text-cyan-200 border border-cyan-400/50 rounded-lg hover:bg-cyan-500/40 transition-all text-sm font-bold flex items-center gap-1"
+              >
+                <Mail size={16} />
+                Reply
+              </button>
+            )}
+            
+            {item.status === 'pending' && (
+              <button
+                onClick={() => handleUpdateStatus(item._id, 'read')}
+                className="px-4 py-2 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-lg hover:bg-blue-500/40 transition-all text-sm font-bold flex items-center gap-1"
+              >
+                <Eye size={16} />
+                Mark as Read
+              </button>
+            )}
+
+            {item.status === 'read' && !item.response && (
+              <button
+                onClick={() => handleUpdateStatus(item._id, 'pending')}
+                className="px-4 py-2 bg-yellow-500/30 text-yellow-200 border border-yellow-400/50 rounded-lg hover:bg-yellow-500/40 transition-all text-sm font-bold flex items-center gap-1"
+              >
+                <Clock size={16} />
+                Mark as Pending
+              </button>
+            )}
+            
+            <button
+              onClick={() => handleDelete('feedback', item._id)}
+              className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1 ml-auto"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+      
+      {feedback.length === 0 && (
+        <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
+          <MessageSquare className="mx-auto text-slate-600 mb-4" size={48} />
+          <p className="text-slate-400 text-lg font-semibold">No feedback submissions yet.</p>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+</div>
+</div>
           {/* Users Tab - FIXED VERSION */}
 {activeTab === 'users' && (
   <div className="space-y-6">
@@ -589,58 +1202,7 @@ function AdminDashboard() {
     </div>
   </div>
 )}
-          {/* Feedback Tab */}
-          {activeTab === 'feedback' && (
-            <div className="space-y-6">
-              <h2 className="text-3xl font-black text-white">Feedback Management</h2>
-              <div className="grid grid-cols-1 gap-4">
-                {feedback.map((item) => (
-                  <div key={item._id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-cyan-400/50 transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
-                          <span className="text-cyan-400 font-bold text-lg">
-                            {item.name?.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-white font-bold">{item.name}</p>
-                          <p className="text-slate-400 text-sm">{item.email}</p>
-                        </div>
-                      </div>
-                      <span className="text-slate-500 text-sm">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    
-                    {item.subject && (
-                      <h4 className="text-cyan-400 font-bold mb-2">{item.subject}</h4>
-                    )}
-                    
-                    <p className="text-slate-300 mb-4 leading-relaxed">{item.message}</p>
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleDelete('feedback', item._id)}
-                        className="px-4 py-2 bg-red-500/30 text-red-200 border border-red-400/50 rounded-lg hover:bg-red-500/40 transition-all text-sm font-bold flex items-center gap-1"
-                      >
-                        <Trash2 size={16} />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                
-                {feedback.length === 0 && (
-                  <div className="text-center py-12 text-slate-400">
-                    <p>No feedback submissions yet.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+          
 
       {/* Modal - FIXED COLORS */}
       {showModal && (

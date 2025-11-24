@@ -43,21 +43,60 @@ export const authAPI = {
 };
 
 // ===== EVENTS =====
-// ===== EVENTS =====
 export const eventsAPI = {
-  // params: { status: 'upcoming', upcoming: 'true', page: 1, limit: 10 } etc.
   getAll: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return apiCall(`/events${query ? `?${query}` : ''}`);
   },
+  
   getOne: (id) => apiCall(`/events/${id}`),
-  register: (id) => apiCall(`/events/${id}/register`, { method: 'POST' }, true),
+  
+  register: async (id) => {
+    try {
+      const response = await apiCall(`/events/${id}/register`, { method: 'POST' }, true);
+      return response;
+    } catch (error) {
+      if (error.message.includes('already registered')) {
+        throw new Error('You have already registered for this event');
+      }
+      throw error;
+    }
+  },
+  
   unregister: (id) => apiCall(`/events/${id}/unregister`, { method: 'DELETE' }, true),
 
-  // Matches route: GET /api/events/my/events
-  getMyEvents: () => apiCall('/events/my/events', {}, true),
+  getMyEvents: async () => {
+    try {
+      const response = await apiCall('/events/my/events', {}, true);
+      
+      if (Array.isArray(response)) {
+        return response;
+      } else if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      } else if (response.events && Array.isArray(response.events)) {
+        return response.events;
+      }
+      
+      console.error('Unexpected response format from /events/my/events:', response);
+      return [];
+    } catch (error) {
+      console.error('Error fetching my events:', error);
+      throw error;
+    }
+  },
+  
+  approveRegistration: (registrationId, notes = '') => 
+    apiCall(`/registrations/${registrationId}/approve`, {
+      method: 'PUT',
+      body: JSON.stringify({ notes })
+    }, true),
+  
+  rejectRegistration: (registrationId, notes = '') => 
+    apiCall(`/registrations/${registrationId}/reject`, {
+      method: 'PUT',
+      body: JSON.stringify({ notes })
+    }, true),
 };
-
 
 // ===== BLOGS =====
 export const blogsAPI = {
@@ -82,8 +121,8 @@ export const galleryAPI = {
 
 // ===== FEEDBACK =====
 export const feedbackAPI = {
-  submit: (data) => apiCall('/feedback', { method: 'POST', body: JSON.stringify(data) }),
-  getMy: () => apiCall('/feedback/my', {}, true),
+  submit: (data) => apiCall('/feedback', { method: 'POST', body: JSON.stringify(data) }, true), // Now requires auth
+  getMy: () => apiCall('/feedback/my', {}, true), // Get user's own feedback with responses
 };
 
 // ===== ADMIN =====
@@ -94,14 +133,33 @@ export const adminAPI = {
   createEvent: (data) => apiCall('/admin/events', { method: 'POST', body: JSON.stringify(data) }, true),
   updateEvent: (id, data) => apiCall(`/admin/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
   deleteEvent: (id) => apiCall(`/admin/events/${id}`, { method: 'DELETE' }, true),
-  getEventRegistrations: (id) => apiCall(`/admin/events/${id}/registrations`, {}, true),
+  
+  getEventRegistrations: async (eventId) => {
+    try {
+      const response = await apiCall(`/admin/events/${eventId}/registrations`, {}, true);
+      
+      if (response.data && Array.isArray(response.data)) {
+        return { data: response.data };
+      } else if (Array.isArray(response)) {
+        return { data: response };
+      } else if (response.registrations && Array.isArray(response.registrations)) {
+        return { data: response.registrations };
+      }
+      
+      console.error('Unexpected response format:', response);
+      return { data: [] };
+    } catch (error) {
+      console.error('Error fetching event registrations:', error);
+      return { data: [] };
+    }
+  },
 
   // Blogs
   createBlog: (data) => apiCall('/admin/blogs', { method: 'POST', body: JSON.stringify(data) }, true),
   updateBlog: (id, data) => apiCall(`/admin/blogs/${id}`, { method: 'PUT', body: JSON.stringify(data) }, true),
   deleteBlog: (id) => apiCall(`/admin/blogs/${id}`, { method: 'DELETE' }, true),
 
-  // Gallery - FIXED: Changed from /admin/gallery to /gallery
+  // Gallery
   uploadToGallery: async (formData) => {
     const token = getAuthToken();
     try {
@@ -109,7 +167,6 @@ export const adminAPI = {
         method: 'POST',
         headers: { 
           Authorization: `Bearer ${token}` 
-          // Don't set Content-Type for FormData - browser will set it automatically with boundary
         },
         body: formData,
       });
@@ -131,6 +188,10 @@ export const adminAPI = {
   // Feedback
   getAllFeedback: () => apiCall('/feedback/admin/all', {}, true),
   updateFeedbackStatus: (id, data) => apiCall(`/feedback/${id}/status`, { method: 'PUT', body: JSON.stringify(data) }, true),
+  respondToFeedback: (id, response) => apiCall(`/feedback/${id}/respond`, { 
+    method: 'PUT', 
+    body: JSON.stringify({ response }) 
+  }, true),
   deleteFeedback: (id) => apiCall(`/feedback/${id}`, { method: 'DELETE' }, true),
 
   // Users
